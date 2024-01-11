@@ -34,13 +34,6 @@ class TwitchPress_Tools {
     */
     public $return_tool_info = false;
                   
-    /**
-    * Mainly for hooks. 
-    */
-    public static function init() {                
-        add_action( 'admin_init', array( __CLASS__, 'admin_request_listener' )  );     
-    }
-    
     public function url( $tool_name ) {
         $nonce = wp_create_nonce( 'tool_action' );        
         return admin_url( 'admin.php?page=twitchpress_tools&_wpnonce=' . $nonce . '&toolname=' . $tool_name );    
@@ -91,12 +84,10 @@ class TwitchPress_Tools {
 
         $notices = new TwitchPress_Admin_Notices();
         
-        // Prepare Streamlabs Applications object...
         $example = new TwitchPress_EXAMPLE_API();
 
-        // Check if Streamlabs Application is ready...
         if( !$example->streamlabs_app_ready ) {
-            $notices->error( __( 'EXAMPLE Application Not Ready', 'twitchpress-sync' ), __( 'A message here.', 'twitchpress' ) ); 
+            $notices->error( __( 'EXAMPLE Application Not Ready', 'twitchpress' ), __( 'A message here.', 'twitchpress' ) ); 
             return;   
         }
                 
@@ -104,7 +95,7 @@ class TwitchPress_Tools {
             Your tools unique code goes here. Make it do something!
         */
     }
-    
+            
     /**
     * Listens for tools being used on the Quick Tools table view.
     * 
@@ -117,11 +108,11 @@ class TwitchPress_Tools {
     * @version 1.1
     */
     public static function admin_request_listener() {    
-        if( !isset( $_REQUEST['_wpnonce'] ) ) {
+        if( !isset( $_REQUEST['_wpnonce'] ) ) {        
             return;
         }     
         
-        if ( ! wp_verify_nonce( $_REQUEST['_wpnonce'], 'tool_action' ) ) {
+        if ( ! wp_verify_nonce( $_REQUEST['_wpnonce'], 'tool_action' ) ) {   
             return;
         } 
         
@@ -130,15 +121,15 @@ class TwitchPress_Tools {
         }
         $tool_name = twitchpress_clean( $_GET['toolname'] );
              
-        if( !method_exists( __CLASS__, $tool_name ) ) {       
+        if( !method_exists( __CLASS__, $tool_name ) ) {        
             return;
         }    
         
         // Ensure the request is attempting to use an actual tool!
-        if( substr( $tool_name, 0, 5 ) !== "tool_" ) { 
+        if( substr( $tool_name, 0, 5 ) !== "tool_" ) {     
             return; 
         }
-                
+                              
         $QuickTools = new TwitchPress_Tools();                 
         $QuickTools->return_tool_info = true;
         
@@ -148,25 +139,25 @@ class TwitchPress_Tools {
         // Get the requested tools information for performing validation.
         eval( '$tool_info = $QuickTools->$tool_name( $tool_parameters_array );');
         
-        if( !isset( $tool_info['capability'] ) ) {
+        if( !isset( $tool_info['capability'] ) ) {        
             return;
         }
         
-        if( !current_user_can( $tool_info['capability'] ) ) {
+        if( !current_user_can( $tool_info['capability'] ) ) {       
             return;
         }
         
         // Is this a tool with multiple possible actions? 
         if( isset( $tool_info['actions'] ) && is_array( $tool_info['actions'] ) ) {
             $action = twitchpress_clean( $_GET['action'] );
-            if( !isset( $tool_info['actions'][ $action ] ) ) {
+            if( !isset( $tool_info['actions'][ $action ] ) ) {     
                 return false;
             }   
             
             // Pass the specific action to the tools method.
             $tool_parameters_array['action'] = $action;
         }
-        
+
         $QuickTools->return_tool_info = false;
         $QuickTools->$tool_name( $tool_parameters_array );
     }
@@ -186,6 +177,35 @@ class TwitchPress_Tools {
         return $tool_categories = array( 'posts', 'users', 'comments', 'plugins', 'security', 'seo', 'social', 'integration' );    
     }
 
+    /**
+    * Install a group of example pages...
+    * 
+    * @version 1.0 
+    */
+    public function tool_install_example_pages() {
+        $tool_info = array(
+            'title'       => __( 'Install Example Pages', 'multitool' ),
+            'description' => __( 'Installs pages that include shortcodes using your configuration. This includes an index page listing all other pages.', 'multitool' ),
+            'version'     => '1.1',
+            'author'      => 'Ryan Bayne',
+            'url'         => '',
+            'category'    => 'users',
+            'capability'  => 'activate_plugins',
+            'option'      => null,
+            'function'    => __FUNCTION__,
+            'plugin'      => 'TwitchPress',
+        );
+        
+        if( $this->return_tool_info ){ return $tool_info; }     
+        
+        if( !current_user_can( $tool_info['capability'] ) ) { return; }
+
+        $notices = new TwitchPress_Admin_Notices();
+
+        require_once( TWITCHPRESS_PLUGIN_DIR_PATH . 'includes/admin/class.twitchpress-admin-install-examples.php' );
+        TwitchPress_Install_Examples::everything();
+    }
+    
     /**
     * Called by a button in the Help tab under Installation. 
     * 
@@ -222,7 +242,7 @@ class TwitchPress_Tools {
             'function'    => __FUNCTION__,
             'plugin'      => 'TwitchPress',
         );
-        
+                
         if( $this->return_tool_info ){ return $tool_info; }     
         
         if( !current_user_can( $tool_info['capability'] ) ) { return; }
@@ -335,7 +355,7 @@ class TwitchPress_Tools {
     /**
     * Enable/Disabled error display.
     * 
-    * @version 1.0 
+    * @version 2.0 
     */
     public function tool_plugin_displayerrors( $tool_parameters_array ) {
 
@@ -348,12 +368,19 @@ class TwitchPress_Tools {
             'category'    => 'developers',
             'capability'  => 'activate_plugins',
             'option'      => 'displayerrors_activate',
-            'actions'     => array( 
-                'displayerrors'    => array( 'title' => __( 'Display Errors', 'twitchpress' ) ),
-                'hideerrors' => array( 'title' => __( 'Hide Errors', 'twitchpress' ) ),
-            ),
             'function'    => __FUNCTION__
         );
+        
+        // Display the correct switch option...
+        if( get_option( 'twitchpress_displayerrors') == 'yes' ) {
+            $tool_info['actions'] = array( 
+                'hideerrors' => array( 'title' => __( 'Hide Errors', 'twitchpress' ) ),
+            );    
+        } else {
+            $tool_info['actions'] = array( 
+                'displayerrors' => array( 'title' => __( 'Display Errors', 'twitchpress' ) ),
+            );            
+        }
               
         if( $this->return_tool_info ){ return $tool_info; }     
               
@@ -417,386 +444,6 @@ class TwitchPress_Tools {
     }                                                
 
     /**
-    * Tests the Twitch channel subscription update procedure
-    * and generates extra output for debugging.
-    * 
-    * @version 1.0 
-    */
-    public function tool_debug_sub_update() {
-        /**
-        * Description of values.
-        * 
-        * title       - give the tool a name.
-        * description - describe what the tool does.
-        * version     - tools must be versioned to give users warning
-        * author      - we have to know who to come to for help with a tool
-        * url         - link to a tutorial or other documentation
-        * category    - a way to group tools
-        * capability  - apply security using a core or custom capability
-        * option      - add option name if configuration required to use tool
-        */
-        $tool_info = array(
-            'title'       => __( 'Debug Sub Update', 'multitool' ),
-            'description' => __( 'Gets the current users subscription details from the main channel and generates output for debugging problems.', 'multitool' ),
-            'version'     => '1.0',
-            'author'      => 'Ryan Bayne',
-            'url'         => '',
-            'category'    => 'developers',
-            'capability'  => 'activate_plugins',
-            'option'      => null,
-            'function'    => __FUNCTION__,
-            'plugin'      => 'TwitchPress',
-        );
-        
-        if( $this->return_tool_info ){ return $tool_info; }     
-        
-        if( !current_user_can( $tool_info['capability'] ) ) { return; }
-        
-        /*
-            Run indepth subscription update attempt with extra output. 
-        */
-
-        // Create Class Objects
-        if( TWITCHPRESS_API_NAME == 'kraken' )
-        {
-            $kraken = new TWITCHPRESS_Twitch_API_Calls();
-        }
-        else
-        {   
-            $helix = new TWITCHPRESS_Twitch_API();
-        }
-
-        // Build the output for the entire procedure. 
-        $output = __( 'Debugging Subscription Update Procedure', 'twitchpress' );
-
-        // This test only uses the current user. 
-        $user_id = get_current_user_id();
-        $user_info = get_userdata( $user_id );
-        $output .= sprintf( __( '<p><strong>User ID: %s</strong></p>', 'twitchpress' ), $user_id );
-        
-        // Get the main channel Twitch ID.
-        $channel_id = twitchpress_get_main_channels_twitchid();
-        $output .= sprintf( __( '<p><strong>Main Channel ID: %s</strong></p>', 'twitchpress' ), $channel_id );
-        
-        // Get main account token.     
-        $channel_token = twitchpress_get_main_channels_token();
-        $output .= sprintf( __( '<p><strong>Main Token: %s</strong></p>', 'twitchpress' ), $channel_token );
-
-        // Get main account code. 
-        $channel_code = $kraken->get_main_client_code();
-        $output .= sprintf( __( '<p><strong>Main Code: %s</strong></p>', 'twitchpress' ), $channel_code );
-
-        // Setup a call name for tracing. 
-        $kraken->twitch_call_name = __( 'Debug Update Subscription', 'twitchpress' );
-        
-        // Get current users Twitch ID.
-        $users_twitch_id = get_user_meta( $user_id, 'twitchpress_twitch_id', true );
-        $output .= sprintf( __( '<p><strong>Users Twitch ID: %s</strong></p>', 'twitchpress' ), $users_twitch_id );
-        
-        // Get possible existing sub plan from a earlier sub sync.
-        $local_sub_plan = get_user_meta( $user_id, 'twitchpress_sub_plan_' . $channel_id, true  );
-        $output .= sprintf( __( '<p><strong>Existing Sub Plan Value: %s</strong></p>', 'twitchpress' ), $local_sub_plan );
-
-        // Check channel subscription from channel side (does not require scope permission).
-        $output .= sprintf( __( '<p><strong>Calling Twitch.tv for Subscription Details</strong></p>', 'twitchpress' ), $local_sub_plan );        
-        $twitch_sub_response = $kraken->getChannelSubscription( $users_twitch_id, $channel_id, $channel_token, $channel_code );
-                
-        // If Twitch user is a subscriber to channel do_action() early here, maybe a simple thank you notice. 
-        if( isset( $twitch_sub_response['error'] ) || $twitch_sub_response === null ) 
-        {   
-
-            // Prepare error code/status to improve log entry.
-            $status = '';
-            if( isset( $twitch_sub_response['status']) )
-            {
-                $status = $twitch_sub_response['status']; 
-                $output .= sprintf( __( '<p><strong>Error Returned: %s</strong></p>', 'twitchpress' ), $status );                
-            }             
-            else
-            {
-                $status = 'Null';
-                $output .= sprintf( __( '<p><strong>Null Value Returned by Twitch.tv</strong></p>', 'twitchpress' ), '' );        
-            }
-                         
-            if( twitchpress_is_valid_sub_plan( $local_sub_plan ) ) 
-            {   
-                // Delete users subscription for the channel we are checking.    
-                delete_user_meta( $user_id, 'twitchpress_sub_plan_' . $channel_id );  
-                delete_user_meta( $user_id, 'twitchpress_sub_plan_name_' . $channel_id );  
-                
-                $output .= sprintf( __( '<p><strong>Removed Expired Sub Data</strong></p>', 'twitchpress' ), '' );
-
-                TwitchPress_Admin_Notices::add_custom_notice( 'tooldebugsubupdateexpiry', $output );            
-                return;
-            }
-            else
-            {
-                // Invalid sub plan found in users data. 
-                $output .= sprintf( __( '<p><strong>Sub Plan Invalid: %s</strong></p>', 'twitchpress' ), $local_sub_plan );        
-            }       
-
-            TwitchPress_Admin_Notices::add_custom_notice( 'tooldebugsubupdateerror', $output );            
-            return;
-        }
-        elseif( isset( $twitch_sub_response['sub_plan'] ) )
-        {
-            // Sub plan value returned. 
-            $output .= sprintf( __( '<p><strong>Sub Plan Value Returned: </strong></p>', 'twitchpress' ), $twitch_sub_response['sub_plan'] );
-            
-            // Updated Sub Status
-            update_user_meta( $user_id, 'twitchpress_substatus_mainchannel', true );
-            $output .= sprintf( __( '<p><strong>Updated User Meta Sub Status to TRUE</strong></p>', 'twitchpress' ), '' );
-                     
-            if( !twitchpress_is_valid_sub_plan( $local_sub_plan ) ) 
-            {      
-                // User is being registered as a Twitch sub for the first time.
-                update_user_meta( $user_id, 'twitchpress_sub_plan_' . $channel_id, $twitch_sub_response['sub_plan'] );
-                update_user_meta( $user_id, 'twitchpress_sub_plan_name_' . $channel_id, $twitch_sub_response['sub_plan_name'] );
-                
-                $output .= sprintf( __( '<p><strong>New Twitch Subscriber Confirmed</strong></p>', 'twitchpress' ), '' );
-                
-                TwitchPress_Admin_Notices::add_custom_notice( 'tooldebugsubupdatesubplan', $output );            
-                return; 
-            } 
-            elseif( twitchpress_is_valid_sub_plan( $local_sub_plan ) ) 
-            {  
-                // User is not a newely detected subscriber and has sub history stored in WP, check for sub plan change. 
-     
-                if( $twitch_sub_response['sub_plan'] !== $local_sub_plan )
-                { 
-                    // User has changed their subscription plan and are still subscribing.
-                    update_user_meta( $user_id, 'twitchpress_sub_plan_' . $channel_id, $twitch_sub_response['sub_plan'] );                        
-                    update_user_meta( $user_id, 'twitchpress_sub_plan_name_' . $channel_id, $twitch_sub_response['sub_plan'] );                        
-                    
-                    $output .= sprintf( __( '<p><strong>Sub Plan Change Confirmed</strong></p>', 'twitchpress' ), '' );                }
-                else
-                {          
-                    // User is subscribing to the same plan since last sync. 
-                    $output .= sprintf( __( '<p><strong>Activate Subscription Unchanged</strong></p>', 'twitchpress' ), '' );
-                }
-
-                TwitchPress_Admin_Notices::add_custom_notice( 'tooldebugsubupdateplanvalid', $output );            
-                return;
-            } 
-        }      
-
-        $output .= sprintf( __( '<p><strong>Bad State</strong></p>', 'twitchpress' ), '' );
-        
-        TwitchPress_Admin_Notices::add_custom_notice( 'tooldebugsubupdatefinal', $output );            
-        return; 
-    }   
-    
-    public function tool_update_zyphers_sub() {
-        
-        /**
-        * Description of values.
-        * 
-        * title       - give the tool a name.
-        * description - describe what the tool does.
-        * version     - tools must be versioned to give users warning
-        * author      - we have to know who to come to for help with a tool
-        * url         - link to a tutorial or other documentation
-        * category    - a way to group tools
-        * capability  - apply security using a core or custom capability
-        * option      - add option name if configuration required to use tool
-        */
-        $tool_info = array(
-            'title'       => __( 'Update LOLinDark\'s Sub', 'multitool' ),
-            'description' => __( 'Update sub for LOLinDark using Twitch ID 120841817 for channel ID 20519306.', 'multitool' ),
-            'version'     => '1.0',
-            'author'      => 'Ryan Bayne',
-            'url'         => '',
-            'category'    => 'developers',
-            'capability'  => 'activate_plugins',
-            'option'      => null,
-            'function'    => __FUNCTION__,
-            'plugin'      => 'TwitchPress',
-        );
-            
-        if( $this->return_tool_info ){ return $tool_info; }     
-            
-        if( !current_user_can( $tool_info['capability'] ) ) { return; }
-               
-        /*
-            Run indepth subscription update attempt with extra output. 
-        */
-
-        // Create Class Objects
-        if( TWITCHPRESS_API_NAME == 'kraken' )
-        {
-            $kraken = new TWITCHPRESS_Twitch_API_Calls();
-        }
-        else
-        {   
-            $helix = new TWITCHPRESS_Twitch_API();
-        }
-
-        // Build the output for the entire procedure. 
-        $output = __( 'Debugging Subscription Update Procedure', 'twitchpress' );
-
-        // This test only uses the current user. 
-        $user_id = get_current_user_id();
-        $user_info = get_userdata( $user_id );
-        $output .= sprintf( __( '<p><strong>User ID: %s</strong></p>', 'twitchpress' ), $user_id );
-        
-        // Get the main channel Twitch ID.
-        $channel_id = twitchpress_get_main_channels_twitchid();
-        $output .= sprintf( __( '<p><strong>Main Channel ID: %s</strong></p>', 'twitchpress' ), $channel_id );
-        
-        // Get main account token.     
-        $channel_token = twitchpress_get_main_client_token();
-        $output .= sprintf( __( '<p><strong>Main Token: %s</strong></p>', 'twitchpress' ), $channel_token );
-
-        // Get main account code. 
-        $channel_code = $kraken->get_main_client_code();
-        $output .= sprintf( __( '<p><strong>Main Code: %s</strong></p>', 'twitchpress' ), $channel_code );
-
-        // Setup a call name for tracing. 
-        $kraken->twitch_call_name = __( 'Debug Update Subscription', 'twitchpress' );
-        
-        // Get current users Twitch ID.
-        $users_twitch_id = get_user_meta( $user_id, 'twitchpress_twitch_id', true );
-        $output .= sprintf( __( '<p><strong>Users Twitch ID: %s</strong></p>', 'twitchpress' ), $users_twitch_id );
-        
-        // Get possible existing sub plan from a earlier sub sync.
-        $local_sub_plan = get_user_meta( $user_id, 'twitchpress_sub_plan_' . $channel_id, true  );
-        $output .= sprintf( __( '<p><strong>Existing Sub Plan Value: %s</strong></p>', 'twitchpress' ), $local_sub_plan );
-
-        // Check channel subscription from channel side (does not require scope permission).
-        $output .= sprintf( __( '<p><strong>Calling Twitch.tv for Subscription Details</strong></p>', 'twitchpress' ), $local_sub_plan );        
-        $twitch_sub_response = $kraken->getChannelSubscription( '120841817', '20519306', $channel_token, $channel_code );
-                
-        // If Twitch user is a subscriber to channel do_action() early here, maybe a simple thank you notice. 
-        if( isset( $twitch_sub_response['error'] ) || $twitch_sub_response === null ) 
-        {   
-
-            // Prepare error code/status to improve log entry.
-            $status = '';
-            if( isset( $twitch_sub_response['status']) )
-            {
-                $status = $twitch_sub_response['status']; 
-                $output .= sprintf( __( '<p><strong>Error Returned: %s</strong></p>', 'twitchpress' ), $status );                
-            }             
-            else
-            {
-                $status = 'Null';
-                $output .= sprintf( __( '<p><strong>Null Value Returned by Twitch.tv</strong></p>', 'twitchpress' ), '' );        
-            }
-                         
-            if( twitchpress_is_valid_sub_plan( $local_sub_plan ) ) 
-            {   
-                // Delete users subscription for the channel we are checking.    
-                delete_user_meta( $user_id, 'twitchpress_sub_plan_' . $channel_id );  
-                delete_user_meta( $user_id, 'twitchpress_sub_plan_name_' . $channel_id );  
-                
-                $output .= sprintf( __( '<p><strong>Removed Expired Sub Data</strong></p>', 'twitchpress' ), '' );
-
-                TwitchPress_Admin_Notices::add_custom_notice( 'updatelolindarksubexpiry', $output );            
-                return;
-            }
-            else
-            {
-                // Invalid sub plan found in users data. 
-                $output .= sprintf( __( '<p><strong>Sub Plan Invalid: %s</strong></p>', 'twitchpress' ), $local_sub_plan );        
-            }       
-
-            TwitchPress_Admin_Notices::add_custom_notice( 'updatelolindarksuberror', $output );            
-            return;
-        }
-        elseif( isset( $twitch_sub_response['sub_plan'] ) )
-        {
-            // Sub plan value returned. 
-            $output .= sprintf( __( '<p><strong>Sub Plan Value Returned: </strong></p>', 'twitchpress' ), $twitch_sub_response['sub_plan'] );
-            
-            // Updated Sub Status
-            update_user_meta( $user_id, 'twitchpress_substatus_mainchannel', true );
-            $output .= sprintf( __( '<p><strong>Updated User Meta Sub Status to TRUE</strong></p>', 'twitchpress' ), '' );
-                     
-            if( !twitchpress_is_valid_sub_plan( $local_sub_plan ) ) 
-            {      
-                // User is being registered as a Twitch sub for the first time.
-                update_user_meta( $user_id, 'twitchpress_sub_plan_' . $channel_id, $twitch_sub_response['sub_plan'] );
-                update_user_meta( $user_id, 'twitchpress_sub_plan_name_' . $channel_id, $twitch_sub_response['sub_plan_name'] );
-                
-                $output .= sprintf( __( '<p><strong>New Twitch Subscriber Confirmed</strong></p>', 'twitchpress' ), '' );
-                
-                TwitchPress_Admin_Notices::add_custom_notice( 'updatelolindarksubinvalid', $output );            
-                return; 
-            } 
-            elseif( twitchpress_is_valid_sub_plan( $local_sub_plan ) ) 
-            {  
-                // User is not a newely detected subscriber and has sub history stored in WP, check for sub plan change. 
-     
-                if( $twitch_sub_response['sub_plan'] !== $local_sub_plan )
-                { 
-                    // User has changed their subscription plan and are still subscribing.
-                    update_user_meta( $user_id, 'twitchpress_sub_plan_' . $channel_id, $twitch_sub_response['sub_plan'] );                        
-                    update_user_meta( $user_id, 'twitchpress_sub_plan_name_' . $channel_id, $twitch_sub_response['sub_plan'] );                        
-                    
-                    $output .= sprintf( __( '<p><strong>Sub Plan Change Confirmed</strong></p>', 'twitchpress' ), '' );                }
-                else
-                {          
-                    // User is subscribing to the same plan since last sync. 
-                    $output .= sprintf( __( '<p><strong>Activate Subscription Unchanged</strong></p>', 'twitchpress' ), '' );
-                }
-
-                TwitchPress_Admin_Notices::add_custom_notice( 'updatelolindarkvalid', $output );            
-                return;
-            } 
-        }      
-
-        $output .= sprintf( __( '<p><strong>Bad State</strong></p>', 'twitchpress' ), '' );
-        
-        TwitchPress_Admin_Notices::add_custom_notice( 'updatelolindarksubfinal', $output );            
-        return;    
-    }      
-
-    /**
-    * Button on user profile allows WP user to request subscription data
-    * sync manually and get visual confirmation of the result.
-    * 
-    * @version 1.0 
-    */
-    public function tool_user_sync_twitch_sub_data() {
-        /**
-        * Description of values.
-        * 
-        * title       - give the tool a name.
-        * description - describe what the tool does.
-        * version     - tools must be versioned to give users warning
-        * author      - we have to know who to come to for help with a tool
-        * url         - link to a tutorial or other documentation
-        * category    - a way to group tools
-        * capability  - apply security using a core or custom capability
-        * option      - add option name if configuration required to use tool
-        */
-        $tool_info = array(
-            'title'       => __( 'Update Twitch Subscription', 'multitool' ),
-            'description' => __( 'Requests a single users subscription data from Twitch.tv and stores it in WordPress.', 'twitchpress' ),
-            'version'     => '1.1',
-            'author'      => 'Ryan Bayne',
-            'url'         => '',
-            'category'    => 'users',
-            'capability'  => 'read',
-            'option'      => null,
-            'function'    => __FUNCTION__,
-            'plugin'      => 'TwitchPress',
-        );
-        
-        if( $this->return_tool_info ){ return $tool_info; }     
-        
-        if( !current_user_can( $tool_info['capability'] ) ) { return; }
-        
-        /*
-            Your tools unique code goes here. Make it do something!
-        */
-        $sync_object = new TwitchPress_Systematic_Syncing();
-        $sync_object->sync_user( get_current_user_id(), false, true, 'user' );
-        
-        do_action( 'twitchpress_manualsubsync' );
-    }
-
-    /**
     * Tool for syncing all users.
     * 
     * Originally in the Sync Extension before it was merged.
@@ -823,7 +470,7 @@ class TwitchPress_Tools {
         $tool_info = array(
             'title'       => __( 'Sync All Users', 'multitool' ),
             'description' => __( 'Import all WP users Twitch user data if not already done recently.', 'twitchpress' ),
-            'version'     => '1.1',
+            'version'     => '1.2',
             'author'      => 'Ryan Bayne',
             'plugin'      => 'Sync Extension',      
             'url'         => '',
@@ -862,15 +509,13 @@ class TwitchPress_Tools {
         $wp_user_query = new WP_User_Query( $args ); 
         $twitchers = $wp_user_query->get_results();
         if ( ! empty( $twitchers ) ) {
-
             foreach ( $twitchers as $next_user ) {
-                $GLOBALS['twitchpress']->sync->sync_user( $next_user->ID, true, false );
+                # $GLOBALS['twitchpress']->
             }
-
         }    
         
         $notices = new TwitchPress_Admin_Notices();
-        $notices->success( __( 'User Sync Finished', 'twitchpress-sync' ), __( 'Your request to import data from Twitch and update your WordPress users has been complete. Due to the technical level of this action it is not easy to generate a summary. Please see log entries for specifics.', 'twitchpress' ) );   
+        $notices->success( __( 'User Sync Finished', 'twitchpress' ), __( 'Your request to import data from Twitch and update your WordPress users has been complete. Due to the technical level of this action it is not easy to generate a summary. Please see log entries for specifics.', 'twitchpress' ) );   
     }    
 
     /**
@@ -903,7 +548,7 @@ class TwitchPress_Tools {
 
         // Check if Streamlabs Application is ready...
         if( !$streamlabs->streamlabs_app_ready ) {
-            $notices->error( __( 'Streamlabs Application Not Ready', 'twitchpress-sync' ), __( 'TwitchPress could not establish all the required Streamlabs credentails to make a call to the Streamlabs API.', 'twitchpress' ) ); 
+            $notices->error( __( 'Streamlabs Application Not Ready', 'twitchpress' ), __( 'TwitchPress could not establish all the required Streamlabs credentails to make a call to the Streamlabs API.', 'twitchpress' ) ); 
             return;   
         }
 
@@ -920,60 +565,9 @@ class TwitchPress_Tools {
          
         // Output
         TwitchPress_Admin_Notices::add_custom_notice( 'toolstreamlabsdisplayowner', 'Error display has been disabled by the TwitchPress Display Errors tool.', 'twitchpress' );
-        $notices->success( __( 'Streamlabs Test', 'twitchpress-sync' ), $content );   
+        $notices->success( __( 'Streamlabs Test', 'twitchpress' ), $content );   
     }
 
-    /**
-    * Install/update the current pro-extension.
-    * 
-    * @version 1.0 
-    */
-    public function tool_install_pro() {
-        /**
-        * Description of values.
-        * 
-        * title       - give the tool a name.
-        * description - describe what the tool does.
-        * version     - tools must be versioned to give users warning
-        * author      - we have to know who to come to for help with a tool
-        * url         - link to a tutorial or other documentation
-        * category    - a way to group tools
-        * capability  - apply security using a core or custom capability
-        * option      - add option name if configuration required to use tool
-        */
-        $tool_info = array(
-            'title'       => __( 'Install Pro Edition', 'multitool' ),
-            'description' => __( 'Run installation of Pro extension (use for updating also).', 'multitool' ),
-            'version'     => '1.1',
-            'author'      => 'Ryan Bayne',
-            'url'         => '',
-            'category'    => 'extensions',
-            'capability'  => 'activate_plugins',
-            'option'      => null,
-            'function'    => __FUNCTION__,
-            'plugin'      => 'TwitchPress',
-        );
-        
-        if( $this->return_tool_info ){ return $tool_info; }     
-        
-        if( !current_user_can( $tool_info['capability'] ) ) { return; }
-
-        $notices = new TwitchPress_Admin_Notices();
-        
-        // Prepare Streamlabs Applications object...
-        $example = new TwitchPress_EXAMPLE_API();
-
-        // Check if Streamlabs Application is ready...
-        if( !$example->streamlabs_app_ready ) {
-            $notices->error( __( 'EXAMPLE Application Not Ready', 'twitchpress-sync' ), __( 'A message here.', 'twitchpress' ) ); 
-            return;   
-        }
-                
-        /*
-            Your tools unique code goes here. Make it do something!
-        */
-    }
-    
     /**
     * Discord Test Tool
     * 
@@ -1015,12 +609,12 @@ class TwitchPress_Tools {
         $discord = new TwitchPress_Discord_API();
 
         
-        https://discord.com/api/oauth2/authorize?client_id=709914283835654184&redirect_uri=http%3A%2F%2Flocalhost%2Ftwitchpress%2Fbranches%2FFebruary2020%2F&response_type=code&scope=identify%20email%20connections%20guilds%20guilds.join%20gdm.join%20rpc%20rpc.notifications.read%20webhook.incoming%20messages.read%20applications.builds.upload%20applications.builds.read%20applications.store.update%20applications.entitlements%20activities.read%20activities.write%20relationships.read
+        //https://discord.com/api/oauth2/authorize?client_id=709914283835654184&redirect_uri=http%3A%2F%2Flocalhost%2Ftwitchpress%2Fbranches%2FFebruary2020%2F&response_type=code&scope=identify%20email%20connections%20guilds%20guilds.join%20gdm.join%20rpc%20rpc.notifications.read%20webhook.incoming%20messages.read%20applications.builds.upload%20applications.builds.read%20applications.store.update%20applications.entitlements%20activities.read%20activities.write%20relationships.read
         
         
         // Check if Streamlabs Application is ready...
         if( !$discord->discord_app_ready ) {
-            $notices->error( __( 'Discord Application Not Ready', 'twitchpress-sync' ), __( 'TwitchPress could not establish required Discord credentails to make a call to the Discord Service.', 'twitchpress' ) ); 
+            $notices->error( __( 'Discord Application Not Ready', 'twitchpress' ), __( 'TwitchPress could not establish required Discord credentails to make a call to the Discord Service.', 'twitchpress' ) ); 
             return;   
         }
 
@@ -1038,16 +632,10 @@ class TwitchPress_Tools {
         */
          
         // Output
-        $notices->success( __( 'DISCORD TEST', 'twitchpress-sync' ), $content ); 
+        $notices->success( __( 'DISCORD TEST', 'twitchpress' ), $content ); 
     }    
 
-    
-    /**
-    * A template tool. Replace "templatetool_" in method name with "tool_".
-    * 
-    * @version 1.0 
-    */
-    public function tool_google_api_test() {
+    public function tool_google_api_test() {   
         /**
         * Description of values.
         * 
@@ -1102,17 +690,520 @@ class TwitchPress_Tools {
             }
 
             $nextPageToken = $playlistItemsResponse['nextPageToken'];
-        } while ($nextPageToken <> '');
+        } while ( $nextPageToken <> '' );
 
         $htmlBody .= '</ul>';
 
         // Output
         TwitchPress_Admin_Notices::add_custom_notice( 'googleapitest', $htmlBody, 'twitchpress' );        
-    }    
-}
+    }   
+    
+    /**
+    * Update plugins core database tables. This will also install missing tables...
+    * 
+    * @version 1.0 
+    */
+    public function tool_update_plugins_core_database_tables() {
+        /**
+        * Description of values.
+        * 
+        * title       - give the tool a name.
+        * description - describe what the tool does.
+        * version     - tools must be versioned to give users warning
+        * author      - we have to know who to come to for help with a tool
+        * url         - link to a tutorial or other documentation
+        * category    - a way to group tools
+        * capability  - apply security using a core or custom capability
+        * option      - add option name if configuration required to use tool
+        */
+        $tool_info = array(
+            'title'       => __( 'Update/Repair Database Tables', 'multitool' ),
+            'description' => __( 'Use to manually repair TwitchPress core database tables - this does not include tables for individual systems.', 'multitool' ),
+            'version'     => '1.1',
+            'author'      => 'Ryan Bayne',
+            'url'         => '',
+            'category'    => 'database',
+            'capability'  => 'activate_plugins',
+            'option'      => null,
+            'function'    => __FUNCTION__,
+            'plugin'      => 'TwitchPress',
+        );
+        
+        if( $this->return_tool_info ){ return $tool_info; }     
+        
+        if( !current_user_can( $tool_info['capability'] ) ) { return; }
 
+        // Install/update core database tables...
+        include_once( TWITCHPRESS_PLUGIN_DIR_PATH . 'includes/classes/class.twitchpress-tables-installation.php' );
+        $tables = new TwitchPress_Install_Tables();
+        $tables->primary_tables();
+        
+        TwitchPress_Admin_Notices::add_custom_notice( 'googleapitest', __( 'Tables have been installed or updated.', 'twitchpress' ), 'twitchpress' );
+    }    
+    
+    /**
+    * Display a count of subscribers for the main channel...
+    * 
+    * @version 1.0 
+    */
+    public function tool_display_main_channel_subscribers_total() {
+        /**
+        * Description of values.
+        * 
+        * title       - give the tool a name.
+        * description - describe what the tool does.
+        * version     - tools must be versioned to give users warning
+        * author      - we have to know who to come to for help with a tool
+        * url         - link to a tutorial or other documentation
+        * category    - a way to group tools
+        * capability  - apply security using a core or custom capability
+        * option      - add option name if configuration required to use tool
+        */
+        $tool_info = array(
+            'title'       => __( 'Display Subscribers Total', 'multitool' ),
+            'description' => __( 'Get and count the total subscribers for the main channel.', 'multitool' ),
+            'version'     => '1.1',
+            'author'      => 'Ryan Bayne',
+            'url'         => '',
+            'category'    => 'users',
+            'capability'  => 'activate_plugins',
+            'option'      => null,
+            'function'    => __FUNCTION__,
+            'plugin'      => 'TwitchPress',
+        );
+        
+        if( $this->return_tool_info ){ return $tool_info; }     
+        
+        if( !current_user_can( $tool_info['capability'] ) ) { return; }
+
+        // Start preparing new API request...
+        $helix = new TwitchPress_Twitch_API();
+        $subs = $helix->get_broadcaster_subscriptions( twitchpress_get_main_channels_twitchid() );
+
+        $notices = new TwitchPress_Admin_Notices();
+
+        if( !isset( $subs->data ) || empty( $subs->data ) )
+        {
+            $message = __( 'The main channel either has no subscribers or cannot offer subscriptions.', 'twitchpress' );
+            
+            $notices->info( __( 'No Subscribers', 'twitchpress' ), $message, false );
+            
+            TwitchPress_API_Logging::outcome( $helix->curl_object->loggingid, $message );
+        }
+        elseif( is_array( $subs->data ) && !empty( $subs->data ) )
+        {
+            $total = count( $subs->data );
+            
+            $message = __( 'The main channel has a total of ' . $total . ' subscribers.', 'twitchpress' );
+            
+            TwitchPress_API_Logging::outcome( $helix->curl_object->loggingid, $message );
+            
+            TwitchPress_Admin_Notices::add_custom_notice( 'mainchannelsubtotaltesttool', $message, 'twitchpress' );            
+        }
+    }
+    
+    /**
+    * Display some subscribers for the main channel...
+    * 
+    * @version 1.0 
+    */
+    public function tool_display_main_channel_subscribers_test() {
+        /**
+        * Description of values.
+        * 
+        * title       - give the tool a name.
+        * description - describe what the tool does.
+        * version     - tools must be versioned to give users warning
+        * author      - we have to know who to come to for help with a tool
+        * url         - link to a tutorial or other documentation
+        * category    - a way to group tools
+        * capability  - apply security using a core or custom capability
+        * option      - add option name if configuration required to use tool
+        */
+        $tool_info = array(
+            'title'       => __( 'Display Subscribers: Test Tool', 'multitool' ),
+            'description' => __( 'Test the plugins ability to get some subscribers for your main channel.', 'multitool' ),
+            'version'     => '1.1',
+            'author'      => 'Ryan Bayne',
+            'url'         => '',
+            'category'    => 'users',
+            'capability'  => 'activate_plugins',
+            'option'      => null,
+            'function'    => __FUNCTION__,
+            'plugin'      => 'TwitchPress',
+        );
+        
+        if( $this->return_tool_info ){ return $tool_info; }     
+        
+        if( !current_user_can( $tool_info['capability'] ) ) { return; }
+
+        $notices = new TwitchPress_Admin_Notices();
+        
+        $helix = new TWITCHPRESS_Twitch_API();
+        $twitch_sub_response = $helix->get_broadcaster_subscriptions( twitchpress_get_main_channels_twitchid() );        
+        
+        if( isset( $twitch_sub_response->data ) && count( $twitch_sub_response->data ) == 0 ) {
+            $notices->error( __( 'No Subscribers', 'twitchpress' ), __( 'If the test worked then there are no subscribers for the main channel.', 'twitchpress' ) ); 
+            return;   
+        }
+        
+        $limit = 3;
+        $dumped = 0;
+         
+        foreach( $twitch_sub_response->data as $key => $subscriber ) {
+            twitchpress_var_dump( $subscriber );  # DO NOT REMOVE # 
+            ++$dumped;
+            if( $dumped == $limit ) { break; }
+        }
+    }    
+
+    /**
+    * Test if the Subscribers system is ready, the main channel has subscribers...
+    * 
+    * @version 1.0 
+    */
+    public function tool_display_main_channel_subscribers_system_ready_test() {
+        /**
+        * Description of values.
+        * 
+        * title       - give the tool a name.
+        * description - describe what the tool does.
+        * version     - tools must be versioned to give users warning
+        * author      - we have to know who to come to for help with a tool
+        * url         - link to a tutorial or other documentation
+        * category    - a way to group tools
+        * capability  - apply security using a core or custom capability
+        * option      - add option name if configuration required to use tool
+        */
+        $tool_info = array(
+            'title'       => __( 'Subscribers System Ready Test', 'multitool' ),
+            'description' => __( 'Determine if the subscribers system is ready with your main Twitch channel.', 'multitool' ),
+            'version'     => '1.1',
+            'author'      => 'Ryan Bayne',
+            'url'         => '',
+            'category'    => 'subscribers',
+            'capability'  => 'activate_plugins',
+            'option'      => null,
+            'function'    => __FUNCTION__,
+            'plugin'      => 'TwitchPress',
+        );
+        
+        if( $this->return_tool_info ){ return $tool_info; }     
+        
+        if( !current_user_can( $tool_info['capability'] ) ) { return; }
+        
+        $notices = new TwitchPress_Admin_Notices();
+        
+        // Check broadcaster type to ensure main channel is part of subscription program...
+        $helix = new TWITCHPRESS_Twitch_API();
+        $user = $helix->get_user_by_id( twitchpress_get_main_channels_twitchid() );
+        if( $user->data[0]->broadcaster_type !== 'partner' && $user->data[0]->broadcaster_type !== 'affiliate' ) {
+            $notices->error( __( 'Subscription System Not Ready', 'twitchpress' ), __( 'The main channel is not part of the Twitch subscription program. A channel needs to have partner or affiliate status to offer subscriptions.', 'twitchpress' ) );         
+            return;
+        }
+        
+        // Confirm user read subscriptions scope has been checked for the main application...
+        if( !twitchpress_confirm_scope( 'user_read_subscriptions', 'channel' ) ) {
+            $notices->error( __( 'User Scope Issue', 'twitchpress' ), __( 'The user:read:subscriptions scope has not been checked in settings.', 'twitchpress' ) ); 
+            return;               
+        } 
+        
+        // Confirm channel red subscriptions scope has been checked for the main application...
+        if( !twitchpress_confirm_scope( 'channel_read_subscriptions', 'channel' ) ) {
+            $notices->error( __( 'Channel Scope Issue', 'twitchpress' ), __( 'The channel:read:subscriptions scope has not been checked in settings.', 'twitchpress' ) ); 
+            return;               
+        }        
+
+        // Get the main channels subscribers...
+        $subscribers = $helix->get_broadcaster_subscriptions( twitchpress_get_main_channels_twitchid(), null, null, 100 );
+                  
+        if( !isset( $subscribers->total ) ) {
+            $notices->error( __( 'Problem Detected', 'twitchpress' ), __( 'TwitchPress was unable to get any subscribers for the main channel, please report this notice in the TwitchPress Discord.', 'twitchpress' ) );             
+        } else {
+            $notices->success( __( 'Subscription System Ready', 'twitchpress' ), sprintf( __( 'TwitchPress was able to confirm you have %d subscribers or more. The subscription system is ready.', 'twitchpress' ), $subscribers->total ) );    
+        }        
+    }    
+    
+    /**
+    * Starts a commercial on the main channel.
+    * 
+    * @version 1.0 
+    */
+    public function tool_start_commercial() {
+        $tool_info = array(
+            'title'       => __( 'Start Commercial', 'multitool' ),
+            'description' => __( 'Starts a commercial on the main channel.', 'multitool' ),
+            'version'     => '1.1',
+            'author'      => 'Ryan Bayne',
+            'url'         => '',
+            'category'    => 'moderation',
+            'capability'  => 'activate_plugins',
+            'option'      => null,
+            'function'    => __FUNCTION__,
+            'plugin'      => 'TwitchPress',
+        );
+        
+        if( $this->return_tool_info ){ return $tool_info; }     
+        
+        if( !current_user_can( $tool_info['capability'] ) ) { return; }
+
+        $notices = new TwitchPress_Admin_Notices();
+        
+        $helix = new TWITCHPRESS_Twitch_API();
+        
+        $main_channels_twitch_id = twitchpress_get_main_channels_twitchid();
+         
+        $reply = $helix->start_commercial( $main_channels_twitch_id, $length = 30 );   
+
+        if( isset( $reply->status ) && $reply->status == '400' ) {
+            $notices->error( __( 'Commercial Cannot Run', 'twitchpress' ), $reply->error . ', ' . $reply->message );    
+        } else {
+            $append = sprintf( 'The commercial will run for %d seconds and you can run another in %d seconds.', 
+            $reply->data[0]->length, $reply->data[0]->retry_after );
+            
+            $notices->add_custom_notice( 'startcommercialtoolmainchannel', $reply->data[0]->message );            
+        }
+    }
+
+    /**
+    * 
+    * 
+    * @version 1.0 
+    */
+    public function tool_get_bits_leaderboard() {
+        $tool_info = array(
+            'title'       => __( 'Get Bits Leaderboard', 'multitool' ),
+            'description' => __( 'Gets a ranked list of Bits leaderboard information for an authorized broadcaster.', 'multitool' ),
+            'version'     => '1.1',
+            'author'      => 'Ryan Bayne',
+            'url'         => '',
+            'category'    => 'moderation',
+            'capability'  => 'activate_plugins',
+            'option'      => null,
+            'function'    => __FUNCTION__,
+            'plugin'      => 'TwitchPress',
+        );
+        
+        if( $this->return_tool_info ){ return $tool_info; }     
+        
+        if( !current_user_can( $tool_info['capability'] ) ) { return; }
+
+        $notices = new TwitchPress_Admin_Notices();
+        
+        $helix = new TWITCHPRESS_Twitch_API();
+        $reply = $helix->get_bits_leaderboard( 100 );
+        
+        twitchpress_var_dump_safer( $reply );
+    }
+
+    /**
+    * Sync a giving WordPress users Twitch subscription data...
+    * 
+    * @version 1.0 
+    * 
+    * @uses function twitchpress_toolsform_syncsubscriber()
+    */
+    public function tool_syncsubscriber() {            
+        /**
+        * Description of values.
+        * 
+        * title       - give the tool a name.
+        * description - describe what the tool does.
+        * version     - tools must be versioned to give users warning
+        * author      - we have to know who to come to for help with a tool
+        * url         - link to a tutorial or other documentation
+        * category    - a way to group tools
+        * capability  - apply security using a core or custom capability
+        * option      - add option name if configuration required to use tool
+        */
+        $tool_info = array(
+            'title'       => __( 'Sync Subscriber', 'multitool' ),
+            'description' => __( 'Enter a WordPress user ID to update their Twitch subscription data.', 'multitool' ),
+            'version'     => '1.1',
+            'author'      => 'Ryan Bayne',
+            'url'         => '',
+            'category'    => 'users',
+            'capability'  => 'activate_plugins',
+            'option'      => null,
+            'function'    => __FUNCTION__,
+            'plugin'      => 'TwitchPress',
+        );        
+        
+        $tool_info['thickbox_link'] = '#TB_inline?&width=600&height=450&inlineId=twitchpress_toolsform_syncsubscriber';  
+                        
+        if( $this->return_tool_info ){ return $tool_info; }     
+        
+        if( !current_user_can( $tool_info['capability'] ) ) { return; }
+
+        $notices = new TwitchPress_Admin_Notices();
+        
+        if( !isset( $_POST['wordpress_user_id'] ) || empty( $_POST['wordpress_user_id'] ) || !is_numeric( $_POST['wordpress_user_id'] ) ) {     
+            $notices->error( __( 'WordPress User ID Missing', 'twitchpress' ), __( 'Please enter a valid WordPress users ID in the pop-up window.', 'twitchpress' ) );             
+            return; 
+        }
+        if( !get_user_by( 'id', $_POST['wordpress_user_id'] ) ) {
+            $notices->error( __( 'WordPress User ID Invalid', 'twitchpress' ), sprintf( __( 'WordPress ID %d does not match a user in this WordPress database.', 'twitchpress' ), $_POST['wordpress_user_id'] ) );                         
+            return;
+        } else {
+            $wp_user_id = $_POST['wordpress_user_id'];
+        } 
+
+        // Display locally stored subscription data...
+        $sub_array = twitchpress_get_user_meta_twitch_sub( $wp_user_id ); 
+        if( !$sub_array ) {
+            $notices->info( __( 'First Time Import', 'twitchpress' ), sprintf( __( 'User with ID %d does not have locally stored Twitch subscription data.', 'twitchpress' ), $wp_user_id ) );    
+        } else {
+            $notices->info( __( 'Previously Imported', 'twitchpress' ), sprintf( __( 'User with ID %d has locally stored Twitch subscription data.', 'twitchpress' ), $wp_user_id ) );                
+        }
+        
+        // Display newly requested data from the Twitch API...
+        $twitch_api = new TwitchPress_Twitch_API();    
+        $twitch_user_id = twitchpress_get_user_twitchid_by_wpid( $_POST['wordpress_user_id'] );    
+        $twitch_channel_id = twitchpress_get_main_channels_twitchid();
+        $twitch_user_token = twitchpress_get_user_token( $wp_user_id );
+        $local_sub_array = twitchpress_get_user_meta_twitch_sub( $wp_user_id );
+        $twitch_sub_array = $twitch_api->get_broadcaster_subscriptions( $twitch_channel_id, $twitch_user_id, false );
+
+        // Cancelled
+        if( $local_sub_array && !$twitch_sub_array ) {
+            
+            TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponsetool', 'warning', false, 
+            __( 'Subscription Ended', 'twitchpress' ), 
+            __( 'The response from Twitch.tv indicates that a previous subscription to the sites main channel was discontinued. Subscriber perks on this website will also be discontinued.', 'twitchpress' ) );
+
+            // API Logging outcome (helix only)...
+            $outcome = sprintf( __( 'User with ID [%s] has stopped subscribing.','twitchpress'), $wp_user_id );
+            TwitchPress_API_Logging::outcome( $twitch_api->curl_object->loggingid, $outcome );
+
+            // Remove local subscription data to prevent perks access...
+            twitchpress_delete_user_meta_twitch_sub( $wp_user_id ); 
+        }
+
+        // No recent subscription... 
+        if( !$local_sub_array && !$twitch_sub_array || !isset( $twitch_sub_array->data[0]->tier ) ) { 
+            TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponsetool', 'info', false, 
+            __( 'Not Subscribing', 'twitchpress' ), 
+            __( 'The response from Twitch.tv indicates that the user is not currently subscribing to this sites main channel.', 'twitchpress' ) );
+            
+            // API Logging outcome...
+            $outcome = sprintf( __( 'User with ID [%s] is not a Twitch.tv subscriber and no updates were required.','twitchpress'), $wp_user_id );
+            TwitchPress_API_Logging::outcome( $twitch_api->curl_object->loggingid, $outcome );
+        }                     
+                        
+        // First time subscription sync...
+        if( !$local_sub_array && $twitch_sub_array && isset( $twitch_sub_array->data[0]->tier ) ) { 
+            // Action - update the user meta with raw subscription data array...
+            twitchpress_update_user_meta_twitch_sub( $wp_user_id, $twitch_sub_array->data[0] );
+            
+            TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponsetool', 'success', false, 
+            __( 'First Import', 'twitchpress' ), 
+            __( 'A Twitch subscription has been imported for the first time for the user.', 'twitchpress' ) );
+
+            // API Logging outcome...
+            $outcome = sprintf( __( 'User with ID [%s] is a subscriber being synced for the first time.','twitchpress'), $wp_user_id );
+            TwitchPress_API_Logging::outcome( $twitch_api->curl_object->loggingid, $outcome );
+        }
+                                
+        // Sub plan changed...
+        if( isset( $local_sub_array->tier ) && isset( $twitch_sub_array->data[0]->tier ) && $local_sub_array->tier !== $twitch_sub_array->data[0]->tier ) {
+            twitchpress_update_user_meta_twitch_sub( $wp_user_id, $twitch_sub_array->data[0] );
+            
+            TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponsetool', 'success', false, 
+            __( 'Subscription Plan Changed', 'twitchpress' ), 
+            __( 'Existing subscription data was updated due to a change in the plan.', 'twitchpress' ) );
+
+            // API Logging outcome (helix only)...
+            $outcome = sprintf( __( 'User with ID [%s] has changed their Twitch.tv subscription plan.','twitchpress'), $wp_user_id );
+            TwitchPress_API_Logging::outcome( $twitch_api->curl_object->loggingid, $outcome );
+        }
+
+        // No change to plan...
+        if( isset( $local_sub_array->tier ) && isset( $twitch_sub_array->data[0]->tier ) && $local_sub_array->tier == $twitch_sub_array->data[0]->tier ) {
+            TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponsetool', 'success', false, 
+            __( 'Continuing Subscriber', 'twitchpress' ), 
+            __( 'Existing subscription has been confirmed with no changes found, no update required.', 'twitchpress' ) );
+
+            $outcome = sprintf( __( 'User with ID [%s] is subscribing on the same plan.','twitchpress'), $wp_user_id );
+            TwitchPress_API_Logging::outcome( $twitch_api->curl_object->loggingid, $outcome );
+        }   
+
+        if( isset( $_POST['twitchpress_var_dump'] ) ) {
+            twitchpress_var_dump_safer( $twitch_sub_array );
+        }
+        
+        TwitchPress_Admin_Notices::add_wordpress_notice( 'subscriptionquerycompletetool', 'success', false, 
+        __( 'Subscription Query Complete', 'twitchpress' ), 
+        sprintf( __( 'This notice marks the end of the procedure for querying the Twitch.tv subscription for WordPress user ID %s and if information you require has not been displayed in additional notices please contact the plugin author with feedback.', 'twitchpress' ), $wp_user_id ) );                            
+    }
+    
+    
+    /**
+    * This tool tests TwitchPress_Twitch_API::get_user_by_id() 
+    * 
+    * @version 1.0 
+    */
+    public function tool_get_user_by_id() {
+        /**
+        * Description of values.
+        * 
+        * title       - give the tool a name.
+        * description - describe what the tool does.
+        * version     - tools must be versioned to give users warning
+        * author      - we have to know who to come to for help with a tool
+        * url         - link to a tutorial or other documentation
+        * category    - a way to group tools
+        * capability  - apply security using a core or custom capability
+        * option      - add option name if configuration required to use tool
+        */
+        $tool_info = array(
+            'title'       => __( 'Function Test: TwitchPress_Twitch_API::get_user_by_id()', 'multitool' ),
+            'description' => __( 'This function should return an array of data from Twitch.tv for the giving Twitch user.', 'multitool' ),
+            'version'     => '1.1',
+            'author'      => 'Ryan Bayne',
+            'url'         => '',
+            'category'    => 'users',
+            'capability'  => 'activate_plugins',
+            'option'      => null,
+            'function'    => __FUNCTION__,
+            'plugin'      => 'TwitchPress',
+        );
+        
+        $tool_info['thickbox_link'] = '#TB_inline?&width=600&height=450&inlineId=twitchpress_toolsform_get_user_by_id';
+        
+        if( $this->return_tool_info ){ return $tool_info; }     
+        
+        if( !current_user_can( $tool_info['capability'] ) ) { return; }
+
+        $notices = new TwitchPress_Admin_Notices();
+        
+        if( !isset( $_POST['wordpress_user_id2'] ) || empty( $_POST['wordpress_user_id2'] ) || !is_numeric( $_POST['wordpress_user_id2'] ) ) {     
+            $notices->error( __( 'Twitch User ID Missing', 'twitchpress' ), __( 'Please enter a valid Twitch user ID in the pop-up window.', 'twitchpress' ) );             
+            return; 
+        }
+        
+        $twitch = new TwitchPress_Twitch_API();
+        
+        //twitchpress_var_dump( $_POST['wordpress_user_id2'] );
+        
+        $array = $twitch->get_user_by_id( $_POST['wordpress_user_id2'] );
+
+        if( isset( $_POST['twitchpress_var_dump2'] ) ) {
+            twitchpress_var_dump_safer( $array );
+            return;
+        }
+        
+        if( !isset( $array->data[0]->display_name ) ) {     
+            $notices->error( __( 'User Not Found', 'twitchpress' ), sprintf( __( 'The giving ID %s does not match a Twitch user.', 'twitchpress' ), $_POST['wordpress_user_id2'] ) );             
+            return; 
+        }
+                
+        $display_name = $array->data[0]->display_name; 
+        echo $notices->info( __( 'Getting User By Twitch ID', 'twitchpress' ), sprintf( __( 'Twitch user ID belongs too %s', 'twitchpress' ), $display_name ), true );
+    }
+}
+   
 endif;
 
 $QuickTools = new TwitchPress_Tools();
-$QuickTools->init();
+add_action( 'init', array( $QuickTools, 'admin_request_listener' ), 5  );
 unset($QuickTools);

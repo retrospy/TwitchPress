@@ -24,7 +24,11 @@ add_shortcode( 'twitchpress_followers_only', 'twitchpress_shortcode_follower_onl
 * 
 * @version 1.0
 */
-function twitchpress_shortcode_follower_only_content( $atts, $content = null  ) {            
+function twitchpress_shortcode_follower_only_content( $atts, $content = null  ) {   
+    $atts = shortcode_atts( array(             
+            'channel_id'   => null
+    ), $atts, 'twitchpress_shortcode_follower_only_content' );
+             
     $html_output = ''; 
     
     // Visitor must be logged into the blog...

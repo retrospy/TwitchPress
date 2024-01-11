@@ -290,7 +290,7 @@ class TwitchPress_Admin_Setup_Wizard_YouTube {
     }
 
     /**
-     * Save application settings and then forwards user to kraken oauth2.
+     * Save application settings and then forwards user to oauth2.
      * 
      * @version 3.1
      */

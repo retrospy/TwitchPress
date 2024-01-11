@@ -60,4 +60,4 @@ class TwitchPress_Set_Bot_Channel_Auth {
 
 endif;
 
-TwitchPress_Object_Registry::add( 'botchannelauth', new TwitchPress_Set_Bot_Channel_Auth() );
+//TwitchPress_Object_Registry::add( 'botchannelauth', apply get() here );

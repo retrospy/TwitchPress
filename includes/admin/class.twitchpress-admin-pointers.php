@@ -135,4 +135,5 @@ class TwitchPress_Admin_Pointers {
 
 endif;
 
+// Included by class TwitchPress_Admin() by action hook "init"...
 new TwitchPress_Admin_Pointers();

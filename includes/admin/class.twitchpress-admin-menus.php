@@ -36,30 +36,26 @@ class TwitchPress_Admin_Menus {
     */
     function secondary_menu_items() {
         
-        add_submenu_page( $this->slug, __('Channels', $this->slug), __('Channels', $this->slug), 'manage_options', 'edit.php?post_type=channels', '' );
+        add_submenu_page( $this->slug, __('Channels',      $this->slug), __('Channels', $this->slug), 'manage_options', 'edit.php?post_type=channels', '' );
         
         if( 'yes' == get_option( 'twitchpress_perks_switch' ) ) {
-            add_submenu_page( $this->slug, __('Perks',    $this->slug), __('Perks',    $this->slug), 'manage_options', 'edit.php?post_type=perks', '' );
+            add_submenu_page( $this->slug, __('Perks',     $this->slug), __('Perks',    $this->slug), 'manage_options', 'edit.php?post_type=perks', '' );
         }
         
         if( 'yes' == get_option( 'twitchpress_giveaways_switch' ) ) {
-            add_submenu_page( $this->slug, __('Giveaways',$this->slug), __('Giveaways',$this->slug), 'manage_options', 'edit.php?post_type=giveaways', '' );
+            add_submenu_page( $this->slug, __('Giveaways', $this->slug), __('Giveaways', $this->slug), 'manage_options', 'edit.php?post_type=giveaways', '' );
         }
         
-        if( 'yes' == get_option( 'twitchpress_webhooks_switch' ) ) {
-            add_submenu_page( $this->slug, __('Webhooks',    $this->slug), __('Webhooks',    $this->slug), 'manage_options', 'edit.php?post_type=webhooks', '' );        
+        if( 'yes' == get_option( 'twitchpress_webhooks_switch' )  ) {     
+            add_submenu_page( $this->slug, __('Webhooks',  $this->slug), __('Webhooks', $this->slug), 'manage_options', 'edit.php?post_type=webhooks', '' );        
         }
-        
-        if( 'yes' == get_option( 'twitchpress_subscribers_switch' ) ) {
-            add_submenu_page( $this->slug, __('Subscribers', $this->slug), __('Subscribers', $this->slug), 'manage_options', 'twitchpress_subscribers', array( $this, 'subscribers_page' ) );           
-        }
-        
+                 
         if( 'yes' == get_option( 'twitchpress_bot_switch' ) ) {
-            add_submenu_page( $this->slug, __('Bot',         $this->slug), __('Bot',         $this->slug), 'manage_options', 'twitchpress_bot', array( $this, 'bot_page' ) );
+            add_submenu_page( $this->slug, __('Bot',       $this->slug), __('Bot',      $this->slug), 'manage_options', 'twitchpress_bot', array( $this, 'bot_page' ) );
         }
         
-        add_submenu_page( $this->slug, __('Tools',    $this->slug), __('Tools',    $this->slug), 'manage_options', 'twitchpress_tools', array( $this, 'tools_page' ) );
-        add_submenu_page( $this->slug, __('Data',     $this->slug), __('Data',     $this->slug), 'manage_options', 'twitchpress_data', array( $this, 'data_page' ) );
+        add_submenu_page( $this->slug, __('Tools', $this->slug), __('Tools', $this->slug), 'manage_options', 'twitchpress_tools', array( $this, 'tools_page' ) );
+        add_submenu_page( $this->slug, __('Data',  $this->slug), __('Data',  $this->slug), 'manage_options', 'twitchpress_data', array( $this, 'data_page' ) );
     }
     
     /**
@@ -72,11 +68,7 @@ class TwitchPress_Admin_Menus {
     public function tools_page() {
         TwitchPress_Admin_Tools_Views::output();    
     }
-    
-    public function subscribers_page() {
-        TwitchPress_Admin_Subscribers_Views::output();    
-    }
-    
+
     public function data_page() {
         TwitchPress_Admin_Data_Views::output();    
     }      

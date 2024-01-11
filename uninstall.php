@@ -31,30 +31,7 @@ if( 'yes' == get_option( 'twitchpress_remove_options' ) ) { twitchpress_remove_o
 * 
 * @version 2.0
 */
-function twitchpress_remove_options() {      
-    
-    /*  Add this approach when working on uninstallation and improving cleanup...
-    // Include settings so that we can run through defaults
-    include_once( TWITCHPRESS_PLUGIN_DIR_PATH . 'includes/admin/class.twitchpress-admin-settings.php' );
-    $settings = TwitchPress_Admin_Settings::get_settings_pages();
-
-    foreach ( $settings as $section ) {
-        if ( !method_exists( $section, 'get_settings' ) ) {
-            continue;
-        }
-        
-        $subsections = array_unique( array_merge( array( '' ), array_keys( $section->get_sections() ) ) );
-
-        foreach ( $subsections as $subsection ) {
-            foreach ( $section->get_settings( $subsection ) as $value ) {
-                if ( isset( $value['default'] ) && isset( $value['id'] ) ) {
-                    $autoload = isset( $value['autoload'] ) ? (bool) $value['autoload'] : true;
-                    add_option( $value['id'], $value['default'], '', ( $autoload ? 'yes' : 'no' ) );
-                }
-            }
-        }
-    } */
-    
+function twitchpress_remove_options() {          
     delete_option( 'twitchpress_admin_notices' );
     delete_option( 'twitchpress_admin_notice_missingvaluesofferwizard' );
     delete_option( 'twitchpress_allapi_id_streamlabs' );
@@ -128,11 +105,45 @@ function twitchpress_remove_options() {
     delete_option( 'twitchpress_visitor_scope_user_read_email' );
     delete_option( 'twitchpress_visitor_scope_user_subscriptions' );
     delete_option( 'twitchpress_visitor_scope_viewing_activity_read' );
-    
-    // Deprecated September 2019 (Sandbox feature removed)
+    delete_option( 'twitchpress_buddypress_avatars_override' );
+    delete_option( 'twitchpress_twitchpress-embed-everything_settings' );        
+    delete_option( 'twitchpress_twitchpress-login-extension_settings' );        
+    delete_option( 'twitchpress_twitchpress-sync-extension_settings' );        
+    delete_option( 'twitchpress_twitchpress-um-extension_settings' );
+
+    // BugNet   
+    delete_option( 'bugnet_activate_events' );        
+    delete_option( 'bugnet_activate_log' );        
+    delete_option( 'bugnet_activate_tracing' );        
+    delete_option( 'bugnet_levelswitch_emergency' );        
+    delete_option( 'bugnet_levelswitch_alert' );        
+    delete_option( 'bugnet_levelswitch_critical' );        
+    delete_option( 'bugnet_levelswitch_error' );        
+    delete_option( 'bugnet_levelswitch_warning' );        
+    delete_option( 'bugnet_levelswitch_notice' );        
+    delete_option( 'bugnet_handlerswitch_email' );        
+    delete_option( 'bugnet_handlerswitch_logfiles' );        
+    delete_option( 'bugnet_handlerswitch_restapi' );        
+    delete_option( 'bugnet_handlerswitch_tracing' );        
+    delete_option( 'bugnet_handlerswitch_wpdb' );        
+    delete_option( 'bugnet_reportsswitch_dailysummary' );        
+    delete_option( 'bugnet_reportsswitch_eventsnapshot' );        
+    delete_option( 'bugnet_reportsswitch_tracecomplete' );        
+    delete_option( 'bugnet_systemlogging_switch' );        
+    delete_option( 'bugnet_error_dump_user_id' );
+
+    // Deprecated
     delete_option( 'twitchress_sandbox_mode_falsereturns_switch' );
     delete_option( 'twitchress_sandbox_mode_generator_switch' );
     delete_option( 'twitchress_sandbox_mode_switch' );
+    delete_option( 'twitchpress_main_client_secret' );
+    delete_option( 'twitchpress_main_client_id' );
+    delete_option( 'twitchpress_main_redirect_uri' );
+    delete_option( 'twitchpress_main_channel_postid' );
+    delete_option( 'twitchpress_main_channel_name' );
+    delete_option( 'twitchpress_main_channel_id' );
+    delete_option( 'twitchpress_main_token' );
+    delete_option( 'twitchpress_main_token_scopes' );      
 }    
 
 /**
@@ -140,7 +151,19 @@ function twitchpress_remove_options() {
 * 
 * @version 1.0 
 */
-function twitchpress_remove_database_tables() {/* no tables yet */}
+function twitchpress_remove_database_tables() {
+    global $wpdb;
+    
+    $activity  = "{$wpdb->prefix}twitchpress_activity";
+    $errors    = "{$wpdb->prefix}twitchpress_errors";
+    $endpoints = "{$wpdb->prefix}twitchpress_endpoints";
+    $meta      = "{$wpdb->prefix}twitchpress_meta";    
+    
+    $wpdb->query( "DROP TABLE IF EXISTS $activity" );
+    $wpdb->query( "DROP TABLE IF EXISTS $errors" );
+    $wpdb->query( "DROP TABLE IF EXISTS $endpoints" );
+    $wpdb->query( "DROP TABLE IF EXISTS $meta" );
+}
 
 /**
 * Remove all TwitchPress extensions. 
@@ -162,14 +185,29 @@ function twitchpress_remove_extensions() {
 * @version 1.0
 */
 function twitchpress_remove_user_data() {
-    // Include the array of known user meta keys.
-    include_once( 'meta.php' );
-    
-    foreach( twitchpress_meta_array() as $metakey_group_key => $metakey_group_array ) {
-        foreach( $metakey_group_array as $metakey => $metakey_array ) {
-            delete_option( $metakey );
-        }
-    }
+    delete_user_meta( 1, 'twitchpress_twitch_sub' );
+    delete_user_meta( 1, 'twitchpress_avatar_url' );
+    delete_user_meta( 1, 'twitchpress_twitch_logo_url' );
+    delete_user_meta( 1, 'twitchpress_twitch_logo_attachment_id' );
+    delete_user_meta( 1, 'twitchpress_code' );
+    delete_user_meta( 1, 'twitchpress_token' );
+    delete_user_meta( 1, 'twitchpress_twitch_id' );
+    delete_user_meta( 1, 'twitchpress_twitch_bot_id' );
+    delete_user_meta( 1, 'twitchpress_bot_code' );
+    delete_user_meta( 1, 'twitchpress_auth_time' );
+    delete_user_meta( 1, 'twitchpress_bot_token' );
+    delete_user_meta( 1, 'twitchpress_token_scope' );
+    delete_user_meta( 1, 'twitchpress_token_refresh' );
+    delete_user_meta( 1, 'twitchpress_bot_token_refresh' );
+    delete_user_meta( 1, 'twitchpress_twitch_expires_in' );
+    delete_user_meta( 1, 'twitchpress_sync_time' );
+    delete_user_meta( 1, 'twitchpress_twitch_bio' );
+    delete_user_meta( 1, 'twitchpress_twitch_email' );
+    delete_user_meta( 1, 'twitchpress_streamlabs_code' );
+    delete_user_meta( 1, 'twitchpress_streamlabs_access_token' );
+    delete_user_meta( 1, 'twitchpress_streamlabs_expires_in' );
+    delete_user_meta( 1, 'twitchpress_streamlabs_refresh_token' );
+    delete_user_meta( 1, 'twitchpress_streamlabs_scope' );
 }
 
 /**

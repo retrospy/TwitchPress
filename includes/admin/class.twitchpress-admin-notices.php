@@ -31,6 +31,7 @@ class TwitchPress_Admin_Notices {
     
     /**
      * Array of notices - name => callback.
+     * 
      * @var array
      */
     private static $core_notices = array(
@@ -49,8 +50,7 @@ class TwitchPress_Admin_Notices {
         add_action( 'wp_loaded', array( __CLASS__, 'hide_notices' ) );
         add_action( 'shutdown', array( __CLASS__, 'store_notices' ) );
    
-        // When displaying administrator (staff) only notices.
-        if ( current_user_can( 'manage_twitchpress' ) ) {
+        if ( current_user_can( 'activate_plugins' ) ) {
             add_action( 'admin_print_styles', array( __CLASS__, 'add_notices' ) );
         }
         
@@ -199,7 +199,7 @@ class TwitchPress_Admin_Notices {
     }
 
     /**
-     * Show a notice.
+     * Request a pre-set notice to be displayed using the notices name...
      * @param string $name
      */
     public static function add_notice( $name ) {
@@ -430,5 +430,3 @@ class TwitchPress_Admin_Notices {
 }
 
 endif;
-
-TwitchPress_Admin_Notices::init();

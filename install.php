@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
-* Install the TwitchPress plugin on normal activation through the admin.
+* Installs the TwitchPress plugin on normal activation through the admin...
 *         
 * @version 2.0
 */
@@ -25,8 +25,13 @@ function twitchpress_activation_installation() {
         define( 'TWITCHPRESS_INSTALLING', true );
     }
 
-    // Version, conflict and requirement checking...
+    // Additional file includes, version checks, conflict checks...
     twitchpress_installation_prepare();
+    
+    // Install/update core database tables...
+    include_once( TWITCHPRESS_PLUGIN_DIR_PATH . 'includes/classes/class.twitchpress-tables-installation.php' );
+    $tables = new TwitchPress_Install_Tables();
+    $tables->install(); 
     
     // Run individual installation functions...
     twitchpress_installation_add_developer_role();
@@ -43,40 +48,34 @@ function twitchpress_activation_installation() {
     do_action( 'twitchpress_installed' );
 }
 
-function twitchpress_database_change_versions() {
-    $arr = array();
-    
-    // 0.0.0
-    $arr['0.0.0'] = array(            
-        'twitchpress_update_000_file_paths',
-        'twitchpress_update_000_db_version',
-    );
-    
-    return $arr;   
+/**
+* Register core tables...
+* 
+* @version 1.0
+*/
+function twitchpress_register_tables() {
+    global $wpdb;
+    $wpdb->twitchpress_activity  = "{$wpdb->prefix}twitchpress_activity";
+    $wpdb->twitchpress_errors    = "{$wpdb->prefix}twitchpress_errors";
+    $wpdb->twitchpress_endpoints = "{$wpdb->prefix}twitchpress_endpoints";
+    $wpdb->twitchpress_meta      = "{$wpdb->prefix}twitchpress_meta";    
 }
 
 function twitchpress_installation_prepare() {
     include_once( TWITCHPRESS_PLUGIN_DIR_PATH . 'includes/admin/class.twitchpress-admin-notices.php' );
     
     // Flush old notices to avoid confusion during a new installation...
-    TwitchPress_Admin_Notices::remove_all_notices();
-        
+    TwitchPress_Admin_Notices::remove_all_notices(); 
+    
     // Queue upgrades/setup wizard
     $current_installed_version = get_option( 'twitchpress_version', null );
-    $current_db_version        = get_option( 'twitchpress_db_version', null );
 
     // No versions? This is a new install :)
-    if ( is_null( $current_installed_version ) && is_null( $current_db_version ) && apply_filters( 'twitchpress_enable_setup_wizard', true ) ) {  
+    if ( is_null( $current_installed_version ) && apply_filters( 'twitchpress_enable_setup_wizard', true ) ) {  
         TwitchPress_Admin_Notices::add_notice( 'install' );
         delete_transient( '_twitchpress_activation_redirect' );
         set_transient( '_twitchpress_activation_redirect', 1, 30 );
-    }                           
-
-    if ( !is_null( $current_db_version ) && version_compare( $current_db_version, max( array_keys( twitchpress_database_change_versions() ) ), '<' ) ) {
-        TwitchPress_Admin_Notices::add_notice( 'update' );
-    } else {
-        twitchpress_update_db_version();
-    }        
+    }                                  
 }
 
 function twitchpress_installation_roles_and_capabilities() {
@@ -104,87 +103,7 @@ function twitchpress_install_action_do_update() {
 * @version 2.0
 */
 function twitchpress_installation_update() {
-    
-    // 2.3.0 renames options and sort out a messy system that even confused me! 
-    if( $val = get_option( 'twitchpress_main_channel_name' ) ) {
-        
-        add_option( 'twitchpress_main_channels_name', $val );
-        //TwitchPress_Object_Registry::update_var( 'mainchannelauth', 'main_channels_name', $val );
-        
-        $args = array( 
-            'id'   => 'mainchannelauth',
-            'var'  => 'main_channels_name',
-            'new'  => $val,
-        );
-            
-        add_action( 'plugins_loaded', array( 'TwitchPress_Object_Registry', 'update_var_action' ), 1, $args );
-        
-        unset( $val );    
-    }
-    
-    /*  Commented out July 31st 2019 but not before modifying the example above just incase...
-            This update was added before pro and most users will have run the update before pro...
-                   
-    if( $val = get_option( 'twitchpress_main_channel_id' ) ) {
-        add_option( 'twitchpress_main_channels_id', $val );
-        TwitchPress_Object_Registry::update_var( 'mainchannelauth', 'main_channels_id', $val );
-        unset( $val );    
-    }
-    
-    if( $val = get_option( 'twitchpress_main_redirect_uri' ) ) {
-        add_option( 'twitchpress_app_redirect', $val );
-        TwitchPress_Object_Registry::update_var( 'twitchapp', 'app_redirect', $val );
-        unset( $val );    
-    }
-    
-    if( $val = get_option( 'twitchpress_main_client_id' ) ) { 
-        add_option( 'twitchpress_app_id', $val );
-        TwitchPress_Object_Registry::update_var( 'twitchapp', 'app_id', $val );
-        unset( $val );    
-    }
-    
-    if( $val = get_option( 'twitchpress_main_client_secret' ) ) {
-        add_option( 'twitchpress_app_secret', $val );
-        TwitchPress_Object_Registry::update_var( 'twitchapp', 'app_secret', $val );
-        unset( $val );    
-    }
-    
-    if( $val = get_option( 'twitchpress_main_code' ) ) {
-        add_option( 'twitchpress_main_channels_code', $val );
-        TwitchPress_Object_Registry::update_var( 'mainchannelauth', 'main_channels_code', $val );
-        unset( $val );    
-    }
-
-    if( $val = get_option( 'main_channels_refresh_token' ) ) {
-        add_option( 'twitchpress_main_channels_refresh_token', $val );
-        TwitchPress_Object_Registry::update_var( 'mainchannelauth', 'main_channels_refresh', $val );
-        unset( $val );    
-    }
-    
-    if( $val = get_option( 'main_channels_scopes' ) ) {
-        add_option( 'twitchpress_main_channels_scopes', $val );
-        TwitchPress_Object_Registry::update_var( 'mainchannelauth', 'main_channels_scopes', $val );
-        unset( $val );    
-    }            
-
-    if( $val = get_option( 'main_channels_name' ) ) {
-        add_option( 'twitchpress_main_channels_name', $val );
-        TwitchPress_Object_Registry::update_var( 'mainchannelauth', 'main_channels_name', $val );
-        unset( $val );    
-    }
-    
-    if( $val = get_option( 'main_channels_id' ) ) {
-        add_option( 'twitchpress_main_channels_id', $val );
-        TwitchPress_Object_Registry::update_var( 'mainchannelauth', 'main_channels_id', $val );
-        unset( $val );    
-    }
-
-    if( $val = get_option( 'main_channels_postid' ) ) {
-        add_option( 'twitchpress_main_channels_postid', $val );
-        TwitchPress_Object_Registry::update_var( 'mainchannelauth', 'main_channels_postid', $val );
-        unset( $val );    
-    }  
-    */             
+              
 }
     
 /**
@@ -197,58 +116,61 @@ function twitchpress_installation_update() {
 */
 function twitchpress_offer_wizard() {
     $offer_wizard = false;
-    
-    if( !current_user_can( 'manage_twitchpress') ) {
+                                      
+    if( !current_user_can( 'administrator' ) ) {        
         return;    
     }
     
     // Avoid registering notice during the Setup Wizard.
-    if( isset( $_GET['page']) && $_GET['page'] == 'twitchpress-setup' ) {
+    if( isset( $_GET['page']) && $_GET['page'] == 'twitchpress-setup' ) {     
         return;    
     }
     
     // If already displaying the install notice, do not display.
-    if( TwitchPress_Admin_Notices::has_notice( 'install' ) ) {
+    if( TwitchPress_Admin_Notices::has_notice( 'install' ) ) {        
         return;
     }
 
-    if( !twitchpress_get_main_channels_name() ) {
-        
-        $offer_wizard = 'twitchpress_main_channels_name';
-        
-    } elseif( !twitchpress_get_main_channels_twitchid() ) {
-                         
-        $offer_wizard = 'twitchpress_main_channels_id';
-        
-    } elseif( !twitchpress_get_app_id() ) {
-        
-        $offer_wizard = 'twitchpress_app_id';
-        
-    } elseif( !twitchpress_get_app_secret() ) {
-        
-        $offer_wizard = 'twitchpress_app_secret';
-        
-    } elseif( !twitchpress_get_main_channels_code() ) {
-              
-        $offer_wizard = 'twitchpress_main_channels_code';
-        
-    } elseif( !twitchpress_get_main_channels_token() ) {
-        
-        $offer_wizard = 'twitchpress_main_channels_token';
-        
-    }     
+    $a = get_option( 'twitchpress_main_channels_name' );               
+    $b = get_option( 'twitchpress_main_channels_id' );           
+    $c = get_option( 'twitchpress_app_id' );                           
+    $d = get_option( 'twitchpress_app_secret' );                       
+    $e = get_option( 'twitchpress_main_channels_code' );               
+    $f = get_option( 'twitchpress_main_channels_token' );             
+    
+    if( !$a ) { $offer_wizard = 'twitchpress_main_channels_name'; } 
+    elseif( !$b ) { $offer_wizard = 'twitchpress_main_channels_id'; } 
+    elseif( !$c ) { $offer_wizard = 'twitchpress_app_id'; } 
+    elseif( !$d ) { $offer_wizard = 'twitchpress_app_secret'; } 
+    elseif( !$e ) { $offer_wizard = 'twitchpress_main_channels_code'; } 
+    elseif( !$f ) { $offer_wizard = 'twitchpress_main_channels_token'; }     
     
     if( $offer_wizard === false ) { return; }
     
+    // Build a link to wizard...
     $wizard_link = '<p><a href="' . admin_url( 'index.php?page=twitchpress-setup' ) . '" class="button button-primary">' . __( 'Setup Wizard', 'twitchpress' ) . '</a></p>';
     
-    TwitchPress_Admin_Notices::add_wordpress_notice(
-        'missingvaluesofferwizard',
-        'info',
-        false,
-        __( 'Twitch API Credentials Missing', 'twitchpress' ),
-        sprintf( __( 'TwitchPress is not ready because the %s option is missing. If you have already been using the plugin and this notice suddenly appears then it suggests important options have been deleted or renamed. You can go through the Setup Wizard again to correct this problem. You should also report it. %s', 'twitchpress'), $offer_wizard, $wizard_link )    
-    );           
+    // Add a new installation notice if it appears to be a fresh installation...
+    if( !$a && !$b && !$c && !$d && !$e && !$f ) {
+        
+        TwitchPress_Admin_Notices::add_wordpress_notice(
+            'noappvaluesofferwizard',
+            'info',
+            false,
+            __( 'Setup Wizard', 'twitchpress' ),
+            sprintf( __( 'TwitchPress includes a Setup Wizard to help you get the plugin configured, please complete it now. %s', 'twitchpress'), $wizard_link )    
+        );
+
+    } else {
+
+        TwitchPress_Admin_Notices::add_wordpress_notice(
+            'missingvaluesofferwizard',
+            'info',
+            false,
+            __( 'Twitch API Credentials Missing', 'twitchpress' ),
+            sprintf( __( 'TwitchPress is not ready because the %s option is missing. If you have already been using the plugin and this notice suddenly appears then it suggests important options have been deleted or renamed. You can go through the Setup Wizard again to correct this problem. You should also report it. %s', 'twitchpress'), $offer_wizard, $wizard_link )    
+        );      
+    }     
 }
     
 /**
@@ -437,11 +359,8 @@ function twitchpress_installation_create_options() {
 * 
 * @version 1.0
 */
-function twitchpress_installation_add_capabilities_keyholder() {
-    
-    // Give the site owner permission to do everything a TwitchPress Developer would...
-    $user = new WP_User( 1 );
-
+function twitchpress_installation_add_capabilities_keyholder() {    
+    $user = new WP_User( 1 );// Give the site owner permission to do everything a TwitchPress Developer would...
     foreach ( twitchpress_get_developer_capabilities() as $cap_group ) {
         foreach ( $cap_group as $cap ) {
             $user->add_cap( $cap );                 

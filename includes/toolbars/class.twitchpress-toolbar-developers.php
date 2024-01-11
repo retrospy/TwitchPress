@@ -83,31 +83,7 @@ class TwitchPress_Admin_Toolbar_Developers {
                     'href'   => esc_url( $href ),            
                 );
             
-            $wp_admin_bar->add_menu( $args ); 
-            
-            // NEW ITEM - Twitch API Version switch (Kraken, Helix)  
-            $thisaction = 'twitchpress_api_version_switch';     
-        
-                // $_POST processing function can be found in post.php    
-                $href = admin_url( 'admin-post.php?action=' . $thisaction );
-                
-                if( TWITCHPRESS_API_NAME == 'kraken' )
-                {
-                    $name = 'Helix';        
-                }
-                elseif( TWITCHPRESS_API_NAME == 'helix' )
-                {
-                    $name = 'Kraken';    
-                }
-                   
-                $args = array(
-                    'id'     => 'twitchpress-toolbarmenu-switchtwitchapiversion',
-                    'parent' => 'twitchpress-toolbarmenu-configurationoptions',
-                    'title'  => sprintf( __( 'Activate %s', 'twitchpress' ), $name ),
-                    'href'   => esc_url( $href ),            
-                );
-            
-            $wp_admin_bar->add_menu( $args );    
+            $wp_admin_bar->add_menu( $args );     
             
             // NEW ITEM - Beta Testing Switch 
             $thisaction = 'twitchpress_beta_testing_switch';     

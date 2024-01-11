@@ -9,7 +9,6 @@
 */
 
 function twitchpress_options_array() {
-
     return array(
         'misc'     => twitchpress_options_misc(),
         'api'      => twitchpress_options_twitch_api(),
@@ -18,7 +17,6 @@ function twitchpress_options_array() {
         'scope'    => twitchpress_options_scope(),
         'bugnet'   => twitchpress_options_bugnet(),
     );   
-     
 }
                                                   
 function twitchpress_options_misc() {
@@ -80,37 +78,20 @@ function twitchpress_options_twitch_api() {
     $arr[ 'twitchpress_main_channels_name' ] = array();// Main channel name (this might be the title of channel and not lowercase, please confirm)
     $arr[ 'twitchpress_main_channels_id' ] = array();// Main channels Twitch ID (same as user ID)
 
-    // Deprecated
-    $arr[ 'twitchpress_main_client_secret' ] = array();// Deprecated - use twitchpress_app_secret
-    $arr[ 'twitchpress_main_client_id' ] = array();// Deprecated use twitchpress_main_client_id
-    $arr[ 'twitchpress_main_redirect_uri' ] = array();// Deprecated use twitchpress_app_redirect
-    $arr[ 'twitchpress_main_channel_postid' ] = array();// Deprecated - Generated on behalf of the main user. 
-    $arr[ 'twitchpress_main_channel_name' ] = array();// Deprecated - Main channel name (this might be the title of channel and not lowercase, please confirm)
-    $arr[ 'twitchpress_main_channel_id' ] = array();// Deprecated - Main channels Twitch ID (same as user ID)
-    $arr[ 'twitchpress_main_code' ] = array();// Deprecated - Generated on behalf of the main user. 
-    $arr[ 'twitchpress_main_token' ] = array();// Deprecated - Generated on behalf of the main user. 
-    $arr[ 'twitchpress_main_token_scopes' ] = array();// Deprecated - Generated on behalf of the main user. 
-        
     return $arr;
 }
 
 function twitchpress_options_extension_integration() {
-    
     $arr = array();
-
     $arr[ 'twitchpress_twitchpress-embed-everything_settings' ] = array();
     $arr[ 'twitchpress_twitchpress-login-extension_settings' ] = array();
     $arr[ 'twitchpress_twitchpress-sync-extension_settings' ] = array();
     $arr[ 'twitchpress_twitchpress-um-extension_settings' ] = array();
-
     return $arr;
-
 }
 
 function twitchpress_options_switch() {
-    
     $arr = array();
-
     $arr[ 'twitchpress_admin_notices' ] = array();
     $arr[ 'twitchpress_switch_twitter_api_services' ] = array();
     $arr[ 'twitchpress_switch_twitter_api_logs' ] = array();
@@ -131,15 +112,11 @@ function twitchpress_options_switch() {
     $arr[ 'twitchpress_serviceswitch_channels_takeownership' ] = array();
     $arr[ 'twitchpress_serviceswitch_channels_editcontent' ] = array();
     $arr[ 'twitchpress_serviceswitch_channels_controlchatdisplay' ] = array();
-
     return $arr;
-    
 }
 
 function twitchpress_options_otherapi() {
-
     $arr = array();
-
     $arr[ 'twitchpress_otherapi_application_saving' ] = array();
     $arr[ 'twitchpress_api_redirect_uri_twitter' ] = array();
     $arr[ 'twitchpress_api_id_twitter' ] = array();
@@ -172,15 +149,11 @@ function twitchpress_options_otherapi() {
     $arr[ 'twitchpress_api_redirect_uri_streamlabs' ] = array();
     $arr[ 'twitchpress_api_id_streamlabs' ] = array();
     $arr[ 'twitchpress_api_secret_streamlabs' ] = array();
-
-    return $arr;
-      
+    return $arr;  
 }
 
 function twitchpress_options_scope() {
-    
     $arr = array();
-
     $arr[ 'twitchpress_scope_channel_check_subscription' ] = array();
     $arr[ 'twitchpress_scope_channel_commercial' ] = array();
     $arr[ 'twitchpress_scope_channel_editor' ] = array();
@@ -195,17 +168,12 @@ function twitchpress_options_scope() {
     $arr[ 'twitchpress_scope_user_follows_edit' ] = array();
     $arr[ 'twitchpress_scope_user_read' ] = array();
     $arr[ 'twitchpress_scope_user_subscriptions' ] = array();
-    $arr[ 'twitchpress_scope_viewing_activity_read' ] = array();
     $arr[ 'twitchpress_scope_openid' ] = array();
-    
     return $arr;
-
 }
 
 function twitchpress_options_visitor_scope() {
-    
     $arr = array();
-
     $arr[ 'twitchpress_visitor_scope_channel_check_subscription' ] = array();
     $arr[ 'twitchpress_visitor_scope_channel_commercial' ] = array();
     $arr[ 'twitchpress_visitor_scope_channel_editor' ] = array();
@@ -220,17 +188,11 @@ function twitchpress_options_visitor_scope() {
     $arr[ 'twitchpress_visitor_scope_user_follows_edit' ] = array();
     $arr[ 'twitchpress_visitor_scope_user_read' ] = array();
     $arr[ 'twitchpress_visitor_scope_user_subscriptions' ] = array();
-    $arr[ 'twitchpress_visitor_scope_viewing_activity_read' ] = array();
-    $arr[ 'twitchpress_visitor_scope_openid' ] = array();
-    
     return $arr;
-
 }
 
 function twitchpress_options_bugnet() {
-
     $arr = array();
-
     $arr[ 'bugnet_activate_events' ] = array();
     $arr[ 'bugnet_activate_log' ] = array();
     $arr[ 'bugnet_activate_tracing' ] = array();
@@ -250,7 +212,5 @@ function twitchpress_options_bugnet() {
     $arr[ 'bugnet_reportsswitch_tracecomplete' ] = array();
     $arr[ 'bugnet_systemlogging_switch' ] = array();
     $arr[ 'bugnet_error_dump_user_id' ] = array();
-
     return $arr;
- 
 }

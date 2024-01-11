@@ -8,8 +8,7 @@ function bugnet_includes() {
     require_once( plugin_basename( '/class.bugnet-configuration.php' ) );
 
     //if( get_option( 'bugnet_apimonitoring' ) ) { 
-        require_once( plugin_basename( '/class.bugnet-apimonitoring.php' ) );
-        //$this->api_net = new BugNet_API_Net();    
+        require_once( plugin_basename( '/class.bugnet-apimonitoring.php' ) );    
     //}
 }
 

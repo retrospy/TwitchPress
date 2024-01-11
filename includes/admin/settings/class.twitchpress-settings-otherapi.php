@@ -29,7 +29,7 @@ class TwitchPress_Settings_OtherAPI extends TwitchPress_Settings_Page {
         'streamelements',
         'patron'
     );           
-    
+        
     /**
     * Constructor
     * 
@@ -181,7 +181,7 @@ class TwitchPress_Settings_OtherAPI extends TwitchPress_Settings_Page {
              break;
         
            default:
-                // Allow extensions to add_action() and run custom procedures for updating app credentials...
+                // Allow third party plugins to add_action() and run custom procedures for updating app credentials...
                 do_action( 'twitchpress_allapi_application_update_' . $service, $service, $url, $key, $secret );
              break;
         }   

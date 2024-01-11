@@ -36,6 +36,7 @@ class TwitchPress_Admin {
         add_action( 'admin_footer',       'twitchpress_print_js', 25 );
         add_filter( 'admin_footer_text',  array( $this, 'admin_footer_text' ), 1 );
         add_action( 'in_plugin_update_message-' . TWITCHPRESS_PLUGIN_URL, array( $this, 'in_plugin_update_message' ) );        
+    
     }
 
     /**
@@ -57,7 +58,6 @@ class TwitchPress_Admin {
         
         // Class
         include_once( dirname( __FILE__ ) . '/class.twitchpress-admin-menus.php' );
-        include_once( dirname( __FILE__ ) . '/class.twitchpress-admin-notices.php' );
         include_once( dirname( __FILE__ ) . '/class.twitchpress-admin-assets.php' );
         include_once( dirname( __FILE__ ) . '/class.twitchpress-admin-help.php' );
         include_once( dirname( __FILE__ ) . '/class.twitchpress-admin-quicktools.php' );
@@ -99,7 +99,7 @@ class TwitchPress_Admin {
      */
     public function conditional_includes() {
 
-        if ( ! $screen = get_current_screen() ) {
+        if ( ! $screen = get_current_screen() ) {       
             return;
         }
 
@@ -109,7 +109,9 @@ class TwitchPress_Admin {
             break;
             case 'twitchpress' :
             break;
-            case 'users' :
+            case 'users' :         
+                include_once( dirname( __FILE__ ) . '/class.twitchpress-admin-users.php' );
+                new TwitchPress_Admin_Users();
             break;
             case 'user' :
             break;

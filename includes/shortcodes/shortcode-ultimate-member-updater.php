@@ -61,7 +61,7 @@ function twitchpress_subman_um_role_sync() {
     $twitch_channel_id = twitchpress_get_main_channels_twitchid();
     
     // Get the current users Twitch subscription plan. 
-    $sub_plan = twitchpress_get_sub_plan( $wp_user_id, $twitch_channel_id );
+    $sub_plan = twitchpress_get_user_sub_tier( $wp_user_id );
         
     // Get possible current UM role. 
     $current_role = get_user_meta( $wp_user_id, 'role', true );
@@ -93,17 +93,9 @@ function twitchpress_subman_um_role_sync() {
         {   
             // Get and apply default (none) UM role. 
             $next_role = get_option( 'twitchpress_um_subtorole_none', false );
-            
-            update_user_meta( $wp_user_id, 'role', $next_role );
-                                
+            update_user_meta( $wp_user_id, 'role', $next_role );                   
             twitchpress_shortcode_procedure_redirect( 2, array( $sub_plan ) );
             exit;
-        }
-
-        // Log any change in history. 
-        if( $current_role !== $next_role ) {
-            $history_obj = new TwitchPress_History();
-            $history_obj->new_entry( $next_role, $current_role, 'auto', __( '', 'twitchpress' ), $wp_user_id );    
         }
                 
         // Get and apply default (none) UM role. 

@@ -31,7 +31,7 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
          * Protected constructor to prevent creating a new instance of the
          * *Singleton* via the `new` operator from outside of this class.
          */
-        public function init() {
+        public function init() {          
             // twitchpress_init fires once the core has loaded...
             add_action( 'twitchpress_init', array( $this, 'attach_hooks' ) );
         }
@@ -43,8 +43,8 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
          */
         public function attach_hooks() {                
             add_action( 'plugins_loaded',        array( $this, 'init_filters' ), 1 );
-            add_action( 'init',                  array( $this, 'twitch_login_public_listener' ), 1 );
-            add_action( 'init',                  array( $this, 'redirect_login_page' ), 1 );
+            add_action( 'init',                  array( $this, 'twitch_login_public_listener' ), 3 );
+            add_action( 'init',                  array( $this, 'redirect_login_page' ), 3 );
             
             add_shortcode( apply_filters( "twitchpress_connect_button_filter", 'twitchpress_connect_button' ), array( $this, 'shortcode_connect_button' ) );            
 
@@ -113,8 +113,6 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
                 }
             }
                      
-            $helix = new TWITCHPRESS_Twitch_API();
-
             // Create a visitor state array... 
             $states_array = array( 'random14'     => $atts['random14'], 
                                    'loginpageid'  => $atts['loginpageid'],
@@ -136,6 +134,8 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
         *
         * @param mixed $authUrl
         * @param mixed $atts set in shortcode_connect_button()
+        * 
+        * @version 2.0
         */
         public static function connect_button_style_one( $authUrl, $atts ) {      
             ob_start();
@@ -145,7 +145,7 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
                     <div id="twitchpress_connect_button" class="ui text container">
                       <div class="ui inverted segment">
                         <a class="ui twitch button" href="<?php echo $authUrl; ?>">
-                          <i class="twitch icon"></i> Connect with Twitch
+                          <i class="twitch icon"></i><?php echo $atts['text']; ?>
                         </a>
                       </div>
                     </div> 
@@ -153,7 +153,7 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
                 break;
                 case 1:
                     ?>
-                    <div class="twitchpress-connect-button-one">';
+                    <div class="twitchpress-connect-button-one">
                     <a href="<?php echo $authUrl; ?>"><?php echo $atts['text']; ?></a>
                     </div>
                     <?php 
@@ -163,7 +163,7 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
                     <div id="twitchpress_connect_button" class="ui text container">
                       <div class="ui inverted segment">
                         <a class="ui twitch button" href="<?php echo $authUrl; ?>">
-                          <i class="twitch icon"></i> Connect with Twitch
+                          <i class="twitch icon"></i><?php echo $atts['text']; ?>
                         </a>
                       </div>
                     </div> 
@@ -215,7 +215,7 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
             $state_code = $_GET['state'];
 
             // We require the local state value stored in transient. 
-            if( !$this->transient_state = get_transient( 'twitchpress_oauth_' . $state_code ) ) { 
+            if( !$this->transient_state = twitchpress_get_transient_oauth_state( $state_code ) ) { 
                 return;
             }             
             
@@ -245,7 +245,7 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
             if( isset( $_GET['code'] ) ) { $response_arguments['code'] = $_GET['code']; }            
             if( isset( $_GET['scope'] ) ) { $response_arguments['scope'] = $_GET['scope']; }                     
                       
-            // Did it all go terribly wrong in an even worse way?! 
+            // Display public notice that includes Twitch TV message...
             if( isset( $_GET['error'] ) ) { 
                 $this->return_to_login_page( 
                     array( 'key' => 0, 
@@ -285,10 +285,10 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
                 $this->return_to_login_page( array( 'key' => 4, 'source' => 'login', 'display_notice' => true ) );                           
                 return;                   
             }
-        
+                                   
             // Generate a token, it is stored as user meta further down.
             $token_array = $helix->request_user_access_token( $_GET['code'], __FUNCTION__ );   
-
+                                             
             // Confirm token was returned...  
             if( !twitchpress_was_valid_token_returned_from_helix( $token_array ) ) {                           
                 $this->return_to_login_page( array( 'key' => 5, 'source' => 'login', 'display_notice' => true ) );                           
@@ -302,7 +302,6 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
             }
                                 
             // Get the visitors Twitch details...
-            //$twitch_user = $helix->getUserObject_Authd( $token_array->access_token, $_GET['code'] );
             $twitch_reply = $helix->get_user_by_bearer_token( $token_array->access_token );
             
             if( is_wp_error( $twitch_reply ) || $twitch_reply == false ) { 
@@ -361,15 +360,31 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
                     update_user_meta( $wp_user_id, 'twitchpress_code', sanitize_text_field( $_GET['code'] ) );
                     update_user_meta( $wp_user_id, 'twitchpress_token', $token_array->access_token );
                     update_user_meta( $wp_user_id, 'twitchpress_token_refresh', $token_array->refresh_token );
-
+                    update_user_meta( $wp_user_id, 'twitchpress_twitch_expires_in', $token_array->expires_in );
+                    update_user_meta( $wp_user_id, 'twitchpress_token_scope', $token_array->scope );
+                    
                     // Twitch.tv logo replaces gravatar...
                     twitchpress_update_user_meta_avatar( $get_users_results[0]->ID, $twitch_user['logo'] );
-                          
+                         
+                    // Update main channel if main channel owner is logging in...
+                    if( 1 == $wp_user_id ) {
+                        twitchpress_update_main_channels_code( sanitize_text_field( $_GET['code'] ) ); 
+                        twitchpress_update_main_channels_token( $token_array->access_token ); 
+                        twitchpress_update_main_channels_refresh_token( $token_array->refresh_token );
+                        twitchpress_update_main_channels_scopes( $token_array->scope ); 
+                        twitchpress_update_main_channels_expires_in( $token_array->expires_in );                       
+                        twitchpress_update_main_channels_scope( $token_array->scope );                       
+                    }
+                                              
                     // Log the user in.
-                    self::authenticate_login_by_twitch( $get_users_results[0]->ID, $twitch_user['login'], $state_code  );
+                    $authenticated = self::authenticate_login_by_twitch( $get_users_results[0]->ID, $twitch_user['login'], $state_code  );
 
-                    $this->login_success(); 
-                                       
+                    // login_success() will perform a redirect on success...
+                    if( $authenticated )
+                    {
+                        $this->login_success();    
+                    }
+                                      
                     return;
                 } 
             } 
@@ -385,13 +400,19 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
                 update_user_meta( $wp_user->data->ID, 'twitchpress_code', sanitize_text_field( $_GET['code'] ) );
                 update_user_meta( $wp_user->data->ID, 'twitchpress_token', $token_array->access_token );
                 update_user_meta( $wp_user->data->ID, 'twitchpress_token_refresh', $token_array->refresh_token );
-
+                update_user_meta( $wp_user->data->ID, 'twitchpress_twitch_expires_in', $token_array->expires_in );
+                update_user_meta( $wp_user->data->ID, 'twitchpress_token_scope', $token_array->scope );
+                
                 // Twitch.tv logo replaces gravatar...
                 twitchpress_update_user_meta_avatar( $wp_user->data->ID, $twitch_user['logo'] );
 
-                self::authenticate_login_by_twitch( $wp_user->data->ID, $wp_user->data->user_login, $state_code );
+                $authenticated = self::authenticate_login_by_twitch( $wp_user->data->ID, $wp_user->data->user_login, $state_code );
  
-                $this->login_success();
+                // login_success() will perform a redirect on success...
+                if( $authenticated )
+                {
+                    $this->login_success();    
+                }
                 
                 return;
             }
@@ -450,13 +471,13 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
             update_user_meta( $wp_user_id, 'twitchpress_code', sanitize_text_field( $_GET['code'] ) );
             update_user_meta( $wp_user_id, 'twitchpress_token', $token_array->access_token );
             update_user_meta( $wp_user_id, 'twitchpress_token_refresh', $token_array->refresh_token );
-
+            update_user_meta( $wp_user_id, 'twitchpress_twitch_expires_in', $token_array->expires_in );
+            update_user_meta( $wp_user_id, 'twitchpress_token_scope', $token_array->scope );
+            
             // Twitch.tv logo replaces gravatar...
             twitchpress_update_user_meta_avatar( $wp_user_id, $twitch_user['logo'] ); 
             
             self::authenticate_login_by_twitch( $wp_user_id, $twitch_user['login'], $state_code );
-       
-            twitchpress_sync_user_on_registration( $wp_user_id );
 
             $this->return_to_login_page( array( 'key' => 15, 'source' => 'login', 'display_notice' => true ) );                           
             return;            
@@ -645,49 +666,7 @@ if ( ! class_exists( 'TwitchPress_Login_by_Shortcode' ) ) :
             $permalink = get_post_permalink( $custom_login_id );
             twitchpress_redirect_tracking( $permalink, __LINE__, __FUNCTION__, __FILE__ );
             exit;
-        }
-
-        /**
-         * Modify the url returned by wp_registration_url().
-         *
-         * @return string page url with registration shortcode.
-         */
-        public function register_url_func() {
-            if ( isset( $this->db_settings_data['set_registration_url'] ) ) {
-                $reg_url = get_permalink( absint( $this->db_settings_data['set_registration_url'] ) );
-                return $reg_url;
-            }
-        }
-
-        /** force redirection of default registration to custom one */
-        public function redirect_reg_page() {
-            if ( isset( $this->db_settings_data['set_registration_url'] ) ) {
-
-                $reg_url = get_permalink( absint( $this->db_settings_data['set_registration_url'] ) );
-
-                $page_viewed = basename( esc_url( $_SERVER['REQUEST_URI'] ) );
-
-                if ( $page_viewed == "wp-login.php?action=register" && $_SERVER['REQUEST_METHOD'] == 'GET' ) {
-                    twitchpress_redirect_tracking( $reg_url, __LINE__, __FUNCTION__, __FILE__ );
-                    exit;
-                }
-            }
-        }
-        
-        /** Force redirection of default registration to the page with custom registration. */
-        public function redirect_password_reset_page() {
-            if ( isset( $this->db_settings_data['set_lost_password_url'] ) ) {
-
-                $password_reset_url = get_permalink( absint( $this->db_settings_data['set_lost_password_url'] ) );
-
-                $page_viewed = basename( esc_url( $_SERVER['REQUEST_URI'] ) );
-
-                if ( $page_viewed == "wp-login.php?action=lostpassword" && $_SERVER['REQUEST_METHOD'] == 'GET' ) {
-                    twitchpress_redirect_tracking( $password_reset_url, __LINE__, __FUNCTION__, __FILE__ );
-                    exit;
-                }
-            }
-        }                                    
+        }                                   
     }
     
 endif;    

@@ -9,6 +9,7 @@
 
 // load in WordPress only
 defined( 'ABSPATH' ) || die( 'No direct script access allowed!' );
+defined( 'TWITCHPRESS_ABSPATH') || die( 'TwitchPress must be active to access this script!' );
 
 function twitchpress_db_selectrow( $tablename, $condition, $select = '*' ){
     global $wpdb;
@@ -84,12 +85,12 @@ function twitchpress_db_insert( $tablename, $fields ){
         "INSERT INTO $tablename ( $fieldss ) 
          VALUES ( $values )"  
     );  
-    
+                 
     return $wpdb->insert_id;
 }
 
 /**
-* Standard update query
+* Standard update query...
 * 
 * @author Ryan R. Bayne
 * @version 1.5
@@ -103,8 +104,7 @@ function twitchpress_db_update( $tablename, $condition, $fields ){
         if( $first) $first = false; else $query .= ' , ';
         $query .= " `$field` = '" . $value ."' ";
     }
-
-    $query .= empty( $condition)? '': " WHERE $condition ";
+    $query .= empty( $condition )? '': " WHERE $condition ";
     return $wpdb->query( $query );
 }   
 
@@ -131,14 +131,14 @@ function twitchpress_db_count_rows( $tablename, $where = '' ){
 }  
   
 /**
-* get a single value from a single row
+* Get a single value from a single row...
 * 
 * @author Ryan R. Bayne
-* @version 1.1
+* @version 1.2
 */
-function twitchpress_db_get_value( $columns, $tablename, $conditions ){
+function twitchpress_db_get_value( $column, $tablename, $conditions ){
     global $wpdb;
-    return $wpdb->get_var( "SELECT $columns FROM $tablename WHERE $conditions" );
+    return $wpdb->get_var( "SELECT $column FROM $tablename WHERE $conditions" );
 }  
 
 /**
@@ -364,6 +364,7 @@ function twitchpress_db_post_exist_byid( $id){
  * 
  * @global array $wpdb
  * @param string $table_name
+ * 
  * @return boolean, true if table found, else if table does not exist
  */
 function twitchpress_db_does_table_exist( $table_name ){
@@ -580,6 +581,8 @@ function twitchpress_db_query_posts_by_comments( $comment_count_low = 0, $commen
 * @param mixed $tables_array
 * @param mixed $idcolumn
 * @param mixed $where
+* 
+* @version 2.0
 */
 function twitchpress_db_query_multipletables( $tables_array = array(), $idcolumn = false, $where = false, $total = false ){
     global $wpdb;
@@ -627,7 +630,7 @@ function twitchpress_db_query_multipletables( $tables_array = array(), $idcolumn
     $wherepart = '';
     if( $where !== false && is_string( $where ) ){$wherepart = "WHERE $where";}
     
-    $final_query = "SELECT $select FROM $main_table $wherepart $join $limit";
+    $final_query = "SELECT $select FROM $main_table $join $wherepart $limit";
                   
     // build where
     return $wpdb->get_results( $final_query, ARRAY_A );

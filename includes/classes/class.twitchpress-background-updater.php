@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * TwitchPress_Background_Updater Class.
  */
-class TwitchPress_Background_Updater extends TwitchPress_Background_Process {
+class TwitchPress_Background_Updater extends TwitchPress_Background_Processing {
 
     /**
      * @var string
@@ -33,10 +33,8 @@ class TwitchPress_Background_Updater extends TwitchPress_Background_Process {
      */
     public function dispatch() {
         $dispatched = parent::dispatch();
-        $logger     = new TwitchPress_Logger();
-
         if ( is_wp_error( $dispatched ) ) {
-            $logger->add( 'twitchpress_db_updates', sprintf( 'Unable to dispatch updater: %s', $dispatched->get_error_message() ) );
+            //$logger->add    
         }
     }
                          
@@ -94,16 +92,14 @@ class TwitchPress_Background_Updater extends TwitchPress_Background_Process {
             define( 'TWITCHPRESS_UPDATING', true );
         }
 
-        $logger = new TwitchPress_Logger();
-
         include_once( 'twitchpress-update-functions.php' );
 
         if ( is_callable( $callback ) ) {
-            $logger->add( 'twitchpress_db_updates', sprintf( 'Running %s callback', $callback ) );
+            //$logger->add( 'twitchpress_db_updates', sprintf( 'Running %s callback', $callback ) );
             call_user_func( $callback );
-            $logger->add( 'twitchpress_db_updates', sprintf( 'Finished %s callback', $callback ) );
+            //$logger->add( 'twitchpress_db_updates', sprintf( 'Finished %s callback', $callback ) );
         } else {
-            $logger->add( 'twitchpress_db_updates', sprintf( 'Could not find %s callback', $callback ) );
+            //$logger->add( 'twitchpress_db_updates', sprintf( 'Could not find %s callback', $callback ) );
         }
 
         return false;
@@ -116,8 +112,7 @@ class TwitchPress_Background_Updater extends TwitchPress_Background_Process {
      * performed, or, call parent::complete().
      */
     protected function complete() {          
-        $logger = new TwitchPress_Logger();
-        $logger->add( 'twitchpress_db_updates', 'Data update complete' );
+        //$logger->add( 'twitchpress_db_updates', 'Data update complete' );
         twitchpress_update_db_version();
         parent::complete();
     }

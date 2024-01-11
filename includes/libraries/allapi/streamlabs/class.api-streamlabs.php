@@ -1173,9 +1173,9 @@ class TwitchPress_Streamlabs_API extends TWITCHPRESS_All_API {
         global $bugnet;
         
         // Confirm $scope is a real scope. 
-        if( !in_array( $scope, twitchpress_twitch_scopes ) ) {
+        if( !in_array( $scope, array() ) ) {
             ### error 
-            return sprintf( __( 'A Kraken5 call is using an invalid scope. See %s()', 'twitchpress' ), $function );
+            return sprintf( __( 'Twitch API call is using an invalid scope. See %s()', 'twitchpress' ), $function );
         }    
         
         // Check applicable $side array scope.
@@ -1197,7 +1197,7 @@ class TwitchPress_Streamlabs_API extends TWITCHPRESS_All_API {
                 if( !in_array( $scope, twitchpress_get_global_accepted_scopes() ) &&
                         !in_array( $scope, twitchpress_get_visitor_scopes() ) ) { 
                             ### error
-                            return __( 'A Kraken5 call requires a scope that has not been permitted.', 'twitchpress' ); 
+                            return __( 'Twitch API call requires a scope that has not been permitted.', 'twitchpress' ); 
                 }
              break;
         }

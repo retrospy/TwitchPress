@@ -36,8 +36,58 @@ class TwitchPress_Admin_Data_Views {
      * @version 2.0
      */
     public static function get_tabs() {
-        $tabviews = array();
+        $tabviews = array();        
         
+        // API Activity (all API, not just Twitch)
+        $tabviews['apiactivity_list_tables'] = array(
+            'title'  => __( 'API Activity', 'twitchpress' ),
+            'datatabviews' => array(
+                "all_apiactivity" => array(
+                    'title'       => __( 'All Activity', 'twitchpress' ),
+                    'description' => '',
+                    'hide_title'  => true,
+                    'callback'    => array( __CLASS__, 'get_maintabview' )
+                ),                    
+                "twitch_apiactivity" => array(
+                    'title'       => __( 'Twitch API', 'twitchpress' ),
+                    'description' => '',
+                    'hide_title'  => true,
+                    'callback'    => array( __CLASS__, 'get_maintabview' )
+                ),
+            )
+        );        
+        // API Endpoints (general request details)
+        $tabviews['endpoints_list_tables'] = array(
+            'title'  => __( 'API Endpoints', 'twitchpress' ),
+            'datatabviews' => array(
+                "endpoints" => array(
+                    'title'       => __( 'Endpoints', 'twitchpress' ),
+                    'description' => '',
+                    'hide_title'  => true,
+                    'callback'    => array( __CLASS__, 'get_maintabview' )
+                )/*, Use this to add a view category for quick filtering                   
+                "get_requests" => array(
+                    'title'       => __( 'Twitch Requests', 'twitchpress' ),
+                    'description' => '',
+                    'hide_title'  => true,
+                    'callback'    => array( __CLASS__, 'get_maintabview' )
+                ),*/
+            )
+        );             
+           
+        // API Errors 
+        $tabviews['apierrors_list_tables'] = array(
+            'title'  => __( 'API Errors', 'twitchpress' ),
+            'datatabviews' => array(
+                "all_apierrors" => array(
+                    'title'       => __( 'All Errors', 'twitchpress' ),
+                    'description' => '',
+                    'hide_title'  => true,
+                    'callback'    => array( __CLASS__, 'get_maintabview' )
+                )
+            )
+        ); 
+
         // BugNet Daily Log
         $tabviews['bugnet_issues_list_tables'] = array(
             'title'  => __( 'BugNet Issues', 'twitchpress' ),
@@ -80,59 +130,27 @@ class TwitchPress_Admin_Data_Views {
                     'callback'    => array( __CLASS__, 'get_maintabview' )
                 ),
             )
-        );        
-        
-        // API Requests (general request details)
-        $tabviews['kraken5requests_list_tables'] = array(
-            'title'  => __( 'API Requests', 'twitchpress' ),
-            'datatabviews' => array(
-                "all_kraken5requests" => array(
-                    'title'       => __( 'All Requests', 'twitchpress' ),
-                    'description' => '',
-                    'hide_title'  => true,
-                    'callback'    => array( __CLASS__, 'get_maintabview' )
-                )/*, Use this to add a view category for quick filtering                   
-                "get_kraken5requests" => array(
-                    'title'       => __( 'Twitch Requests', 'twitchpress' ),
-                    'description' => '',
-                    'hide_title'  => true,
-                    'callback'    => array( __CLASS__, 'get_maintabview' )
-                ),*/
-            )
-        );       
-         
-        // API Results (Raw curl response)
-        $tabviews['apiresponses_list_tables'] = array(
-            'title'  => __( 'API Responses', 'twitchpress' ),
-            'datatabviews' => array(
-                "all_apiresponses" => array(
-                    'title'       => __( 'All Responses', 'twitchpress' ),
-                    'description' => '',
-                    'hide_title'  => true,
-                    'callback'    => array( __CLASS__, 'get_maintabview' )
-                )
-            )
-        );      
-           
-        // API Errors 
-        $tabviews['apierrors_list_tables'] = array(
-            'title'  => __( 'API Errors', 'twitchpress' ),
-            'datatabviews' => array(
-                "all_apierrors" => array(
-                    'title'       => __( 'All Errors', 'twitchpress' ),
-                    'description' => '',
-                    'hide_title'  => true,
-                    'callback'    => array( __CLASS__, 'get_maintabview' )
-                )
-            )
-        ); 
-                  
+        );
+                          
         // Action Hook History by BugNet 
         $tabviews['actionhooks_list_tables'] = array(
             'title'  => __( 'Action Hook History', 'twitchpress' ),
             'datatabviews' => array(
                 "all_actionhooks" => array(
                     'title'       => __( 'All Action Hook History', 'twitchpress' ),
+                    'description' => '',
+                    'hide_title'  => true,
+                    'callback'    => array( __CLASS__, 'get_maintabview' )
+                )
+            )
+        );                 
+                 
+        // Action Hook History by BugNet 
+        $tabviews['twitchsubs_list_tables'] = array(
+            'title'  => __( 'API Twitch Sub Request', 'twitchpress' ),
+            'datatabviews' => array(
+                "all_twitchsubs" => array(
+                    'title'       => __( 'All Subs', 'twitchpress' ),
                     'description' => '',
                     'hide_title'  => true,
                     'callback'    => array( __CLASS__, 'get_maintabview' )

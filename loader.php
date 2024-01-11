@@ -22,7 +22,7 @@ final class WordPressTwitchPress {
      *
      * @var string
      */
-    public $min_wp_version = '5.2';
+    public $min_wp_version = '5.4';
     
     /**
      * The single instance of the class.
@@ -104,20 +104,10 @@ final class WordPressTwitchPress {
     private function define_hard_constants() {
         
         $upload_dir = wp_upload_dir();
+    
+        if ( ! defined( 'TWITCHPRESS_API_NAME' ) ) { define( 'TWITCHPRESS_API_NAME', 'helix' ); }
+        if ( ! defined( 'TWITCHPRESS_API_VERSION' ) ){ define( 'TWITCHPRESS_API_VERSION', '6' );}        
 
-        // Establish which Twitch API version to use.
-        $api_version = get_option( 'twitchpress_apiversion' ); 
-        if( $api_version == '6' )
-        {
-            if ( ! defined( 'TWITCHPRESS_API_NAME' ) ) { define( 'TWITCHPRESS_API_NAME', 'helix' ); }
-            if ( ! defined( 'TWITCHPRESS_API_VERSION' ) ){ define( 'TWITCHPRESS_API_VERSION', '6' );}        
-        }
-        else
-        {
-            if ( ! defined( 'TWITCHPRESS_API_NAME' ) ) { define( 'TWITCHPRESS_API_NAME', 'kraken' ); }
-            if ( ! defined( 'TWITCHPRESS_API_VERSION' ) ){ define( 'TWITCHPRESS_API_VERSION', '5' );}
-        }  
-     
         // Main (package) constants.
         if ( ! defined( 'TWITCHPRESS_MIN_WP_VERSION' ) ) {    define( 'TWITCHPRESS_MIN_WP_VERSION', $this->min_wp_version ); }
         if ( ! defined( 'TWITCHPRESS_UPLOADS_DIR' ) ) {       define( 'TWITCHPRESS_UPLOADS_DIR', $upload_dir['basedir'] . 'twitchpress-uploads/' ); }
@@ -130,7 +120,6 @@ final class WordPressTwitchPress {
         if ( ! defined( 'TWITCHPRESS_FORUM' ) ) {             define( 'TWITCHPRESS_FORUM', 'https://wordpress.org/support/plugin/twitchpress' ); }
         if ( ! defined( 'TWITCHPRESS_TWITTER' ) ) {           define( 'TWITCHPRESS_TWITTER', 'https://twitter.com/twitchpress' ); }
         if ( ! defined( 'TWITCHPRESS_DONATE' ) ) {            define( 'TWITCHPRESS_DONATE', 'https://www.patreon.com/twitchpress' ); }
-        if ( ! defined( 'TWITCHPRESS_SKYPE' ) ) {             define( 'TWITCHPRESS_SKYPE', 'https://join.skype.com/gxXhLoy6ce8e' ); }
         if ( ! defined( 'TWITCHPRESS_GITHUB' ) ) {            define( 'TWITCHPRESS_GITHUB', 'https://github.com/ryanbayne/twitchpress' ); }
         if ( ! defined( 'TWITCHPRESS_DISCORD' ) ) {           define( 'TWITCHPRESS_DISCORD', 'https://discord.gg/ScrhXPE' ); }
        
@@ -139,7 +128,6 @@ final class WordPressTwitchPress {
         if ( ! defined( 'TWITCHPRESS_AUTHOR_TWITTER' ) ) {    define( 'TWITCHPRESS_AUTHOR_TWITTER', 'http://www.twitter.com/ryan_r_bayne' ); }
         if ( ! defined( 'TWITCHPRESS_AUTHOR_FACEBOOK' ) ) {   define( 'TWITCHPRESS_AUTHOR_FACEBOOK', 'https://www.facebook.com/ryanrbayne' ); }
         if ( ! defined( 'TWITCHPRESS_AUTHOR_DONATE' ) ) {     define( 'TWITCHPRESS_AUTHOR_DONATE', 'https://www.patreon.com/twitchpress' ); }
-        if ( ! defined( 'TWITCHPRESS_AUTHOR_SKYPE' ) ) {      define( 'TWITCHPRESS_AUTHOR_SKYPE', 'https://join.skype.com/gNuxSa4wnQTV' ); }
         if ( ! defined( 'TWITCHPRESS_AUTHOR_GITHUB' ) ) {     define( 'TWITCHPRESS_AUTHOR_GITHUB', 'https://github.com/RyanBayne' ); }
         if ( ! defined( 'TWITCHPRESS_AUTHOR_LINKEDIN' ) ) {   define( 'TWITCHPRESS_AUTHOR_LINKEDIN', 'https://www.linkedin.com/in/ryanrbayne/' ); }
         if ( ! defined( 'TWITCHPRESS_AUTHOR_DISCORD' ) ) {    define( 'TWITCHPRESS_AUTHOR_DISCORD', 'https://discord.gg/ScrhXPE' ); }
@@ -149,7 +137,7 @@ final class WordPressTwitchPress {
         if( ! defined( "TWITCHPRESS_DEFAULT_TIMEOUT" ) ){        define( "TWITCHPRESS_DEFAULT_TIMEOUT", 5 );}
         if( ! defined( "TWITCHPRESS_DEFAULT_RETURN_TIMEOUT" ) ){ define( "TWITCHPRESS_DEFAULT_RETURN_TIMEOUT", 20 );}
         if( ! defined( "TWITCHPRESS_TOKEN_SEND_METHOD" ) ){      define( "TWITCHPRESS_TOKEN_SEND_METHOD", 'HEADER' );}
-        if( ! defined( "TWITCHPRESS_RETRY_COUNTER" ) ){          define( "TWITCHPRESS_RETRY_COUNTER", 2 );}
+        if( ! defined( "TWITCHPRESS_RETRY_CALL_LIMIT" ) ){       define( "TWITCHPRESS_RETRY_CALL_LIMIT", 5 );}
         if( ! defined( "TWITCHPRESS_CERT_PATH" ) ){              define( "TWITCHPRESS_CERT_PATH", '' );}
         if( ! defined( "TWITCHPRESS_CALL_LIMIT_DEFAULT" ) ){     define( "TWITCHPRESS_CALL_LIMIT_DEFAULT", '15' );}
         if( ! defined( "TWITCHPRESS_CALL_LIMIT_DOUBLE" ) ){      define( "TWITCHPRESS_CALL_LIMIT_DOUBLE", '30' );}
@@ -160,7 +148,7 @@ final class WordPressTwitchPress {
         if( ! defined( "TWITCHPRESS_STREAM_TEAM" ) ){ define( "TWITCHPRESS_STREAM_TEAM", 'sutv' );}     
               
         // Library Integration
-        if ( ! defined( 'BUGNET_LOG_DIR' ) ) { define( 'BUGNET_LOG_DIR', TWITCHPRESS_LOG_DIR ); }        
+        if ( ! defined( 'BUGNET_LOG_DIR' ) ) { define( 'BUGNET_LOG_DIR', TWITCHPRESS_LOG_DIR ); }  
     }
     
     /**
@@ -180,74 +168,64 @@ final class WordPressTwitchPress {
      * @version 3.0
      */
     public function includes() {
-
+                                         
         do_action( 'before_twitchpress_includes' );
                
         // SPL autoloader class...
         //require_once( 'includes/classes/class.twitchpress-autoloader.php' );
+
+        require_once( plugin_basename( 'functions.php' ) ); 
+        require_once( plugin_basename( 'hooks.php' ) ); 
         
-        // Function files...
-        require_once( plugin_basename( 'functions.php' ) ); // RFA
-        
-        // Load the debugger "BugNet" as early as possible...
-        require_once( plugin_basename( 'includes/libraries/bugnet/class.bugnet.php' ) ); // RFA 
-        
-        // TwitchPress individual systems...
-        require_once( plugin_basename( 'systems/giveaways/class.twitchpress-giveaways.php' ) ); // RFA
+        // Debugging and logging...
+        require_once( plugin_basename( 'includes/libraries/bugnet/class.bugnet.php' ) ); 
+        require_once( plugin_basename( 'includes/classes/class.twitchpress-api-logging.php' ) );
                         
         // Classes using TwitchPress_Object_Registry() to init for global access...
         require_once( plugin_basename( 'includes/classes/class.twitchpress-set-app.php' ) );
         require_once( plugin_basename( 'includes/classes/class.twitchpress-set-user-auth.php' ) );
         require_once( plugin_basename( 'includes/classes/class.twitchpress-set-main-channel-auth.php' ) );
-        require_once( plugin_basename( 'includes/classes/class.twitchpress-set-bot-channel-auth.php' ) );
-        
-        // Classes and libraries... 
-        require_once( 'includes/classes/class.twitchpress-current-user.php' ); // RFA
-        require_once( 'includes/classes/class.twitchpress-posts-gate.php' ); // RFA
-        require_once( 'includes/blocks/class.twitchpress-blocks.php' ); // RFA
+        //require_once( plugin_basename( 'includes/classes/class.twitchpress-set-bot-channel-auth.php' ) );
+                         
+        // More classes...
+        require_once( plugin_basename( 'systems/giveaways/class.twitchpress-giveaways.php' ) );        
+        require_once( 'includes/admin/class.twitchpress-admin-notices.php' );        
+        require_once( 'includes/classes/class.twitchpress-current-user.php' );
+        require_once( 'includes/classes/class.twitchpress-posts-gate.php' );
+        require_once( 'includes/blocks/class.twitchpress-blocks.php' ); 
         require_once( 'includes/libraries/class.async-request.php' );
         require_once( 'includes/libraries/class.background-process.php' );                           
         require_once( 'includes/classes/class.twitchpress-extension-installer.php' );
         require_once( 'includes/classes/class.twitchpress-ajax.php' );
         require_once( 'includes/libraries/twitch/' . TWITCHPRESS_API_NAME . '/functions.twitch-api-statuses.php' );
         require_once( 'includes/classes/class.twitchpress-extend-wp-http-curl.php' );
-                                          
-        require_once( 'includes/libraries/twitch/' . TWITCHPRESS_API_NAME . '/class.twitch-api.php' ); // RFA            
-
-        if( TWITCHPRESS_API_NAME == 'kraken' ) 
-        {
-            require_once( 'includes/libraries/twitch/' . TWITCHPRESS_API_NAME . '/class.twitch-api-calls.php' );        
-        }
-                                                            
-        require_once( 'includes/classes/class.twitchpress-login.php' ); // RFA
-        require_once( 'includes/classes/class.twitchpress-login-by-shortcode.php' ); // RFA  
+        require_once( 'includes/libraries/twitch/' . TWITCHPRESS_API_NAME . '/class.twitch-api.php' );                                                                        
+        require_once( 'includes/classes/class.twitchpress-login.php' ); 
+        require_once( 'includes/classes/class.twitchpress-login-by-shortcode.php' );   
         require_once( 'includes/toolbars/class.twitchpress-toolbars.php' );        
-        require_once( 'includes/classes/class.twitchpress-curl.php' ); // RFA
+        require_once( 'includes/classes/class.twitchpress-curl.php' ); 
         require_once( 'includes/classes/class.twitchpress-listener.php' );
-        require_once( 'includes/classes/class.twitchpress-sync.php' ); // RFA
-        require_once( 'includes/classes/class.twitchpress-history.php' );
-        require_once( plugin_basename( 'shortcodes.php' ) );
+        require_once( 'includes/classes/class.twitchpress-subscriptions.php' ); 
+        require_once( 'includes/shortcodes/shortcodes-main.php' );
         require_once( plugin_basename( 'requests.php' ) );
         require_once( 'includes/classes/class.twitchpress-listener-main-account-oauth.php' );
-        require_once( 'includes/libraries/twitch/helix/class.twitch-webhooks.php' );
-        require_once( plugin_basename( 'includes/classes/class.twitchpress-public-preset-notices.php' ) ); // RFA
+        require_once( plugin_basename( 'includes/classes/class.twitchpress-public-preset-notices.php' ) ); 
         require_once( 'includes/classes/class.twitchpress-custom-login-notices.php' );
+        require_once( 'includes/posts/class.twitchpress-page-template-splitscreen.php' );
         
-        // Include main class...
+        // Include main API (all-api) class...
         include_once( 'includes/libraries/allapi/class.all-api.php' );
 
-        /* Options are currently bypassed pending switches for all services */
-
-        // Discord
-        include_once( 'includes/libraries/allapi/discord/class.api-discord.php' );
+        // Discord Integration
+        include_once( 'includes/libraries/allapi/discord/class.api-discord.php' );  
         include_once( 'includes/libraries/allapi/discord/class.api-discord-listener.php' );
         
-        // Streamlabs                                                
-        include_once( 'includes/libraries/allapi/streamlabs/functions.api-streamlabs.php' );
+        // Streamlabs Integration
+        include_once( 'includes/libraries/allapi/streamlabs/functions.api-streamlabs.php' );   
         include_once( 'includes/libraries/allapi/streamlabs/class.api-streamlabs.php' );
         include_once( 'includes/libraries/allapi/streamlabs/class.api-streamlabs-listener.php' );
     
-        // YouTube
+        // YouTube Integration
         include_once( 'includes/libraries/allapi/youtube/functions.api-youtube.php' );   
         
         // Administration-only files...     
@@ -270,21 +248,23 @@ final class WordPressTwitchPress {
     * Load class objects required by this core plugin for any request (front or abck) 
     * or at all times by extensions. 
     * 
-    * @version 1.0
+    * @version 2.0
     */
     private function load_core_objects() {
         // Objects not required...
         TwitchPress_Current_User_Setter::init(); /*adds values to $current_user*/
-        
+                          
         // Create objects core objects...
-        if( class_exists( 'BugNet' ) ){ $this->bugnet = new BugNet(); }
-        $this->sync           = new TwitchPress_Systematic_Syncing();
+        if( class_exists( 'BugNet' ) ){ $this->bugnet = new BugNet(); }    
+        $this->subsman        = new TwitchPress_Twitch_Subscription_Management();
         $this->public_notices = new TwitchPress_Public_PreSet_Notices();
         $this->blocks_core    = new TwitchPress_Blocks_Core();
         $this->login          = new TwitchPress_Login(); 
         $this->login_sc       = new TwitchPress_Login_by_Shortcode();  
-        $this->gate           = new TwitchPress_Posts_Gate(); 
-        // See init_system() after adding new line...        
+        $this->gate           = new TwitchPress_Posts_Gate();
+        $this->admin_notices  = new TwitchPress_Admin_Notices();
+
+        # Hint: Go to function init_system() after adding new line here...        
     }
     
     /**
@@ -303,31 +283,18 @@ final class WordPressTwitchPress {
      * 
      * @version 1.0 
      */
-    private function init_hooks() {          
+    private function init_hooks() {        
+        add_action( 'init', 'twitchpress_register_tables', 0 );       
         add_action( 'admin_init', array( $this, 'load_admin_dependencies' ) );
         add_action( 'admin_init', 'twitchpress_offer_wizard' );
         add_action( 'init', array( $this, 'init_system' ), 0 );
-        add_action( 'init', array( $this, 'init_pro' ), 0 );
         add_action( 'init', array( $this, 'output_errors' ), 2 );
         add_action( 'init', array( $this, 'output_actions' ), 2 );            
         add_action( 'init', array( $this, 'output_filters' ), 2 );   
         add_filter( 'views_edit-plugins', array( $this, 'views_edit_plugins' ), 1 );
         add_action( 'wp_enqueue_scripts',    array( $this, 'enqueue_public_css' ), 10 );
         add_action( 'login_enqueue_scripts', array( $this, 'twitchpress_login_styles'), 1 );// Core login form connect button...
-        add_action( 'plugins_loaded', array( $this, 'init_third_party_integration' ), 1 );// Load the 3rd party integration files...              
-    }
-    
-    /**
-    * Pro Upgrade
-    * 
-    * The pro upgrade is not for sale - it is giving as a bonus/reward/perk
-    * depending on how a streamer supports the project or its community.
-    */
-    public function init_pro() {
-        if( TWITCHPRESS_PRO == true ) { 
-            include_once( TWITCHPRESS_PRO_DIR_PATH . 'twitchpress-pro-loader.php' ); 
-            TwitchPress_Pro::init();
-        }        
+        add_action( 'plugins_loaded', array( $this, 'init_third_party_integration' ), 1 );// Load the 3rd party integration files...             
     }
     
     public function init_third_party_integration() {    
@@ -345,9 +312,15 @@ final class WordPressTwitchPress {
     }
             
     public function enqueue_public_css() {
-
+        wp_register_style( 'twitchpress_shortcode_styles', self::plugin_url() . '/assets/css/twitchpress-shortcodes.css' );
+        wp_enqueue_style( 'twitchpress_shortcode_styles' );
     }
             
+    /**
+    * Load admin only files...
+    * 
+    * @version 1.0
+    */
     public function load_admin_dependencies() {
         include_once( 'includes/admin/class.twitchpress-admin-data-views.php' );
         include_once( 'includes/admin/class.twitchpress-admin-tools-views.php' );
@@ -360,18 +333,21 @@ final class WordPressTwitchPress {
         
     public function init_system() {
                    
-        // Before init action.
+        // Before init action...
         do_action( 'before_twitchpress_init' );    
          
         $this->define_wp_reliant_constants();
                                                        
         // Core classes that require initializing...
         if( get_option( 'bugnet_version' ) || class_exists( 'BugNet' ) ){ $this->bugnet->init(); }
-        $this->sync->init();
-        $this->blocks_core->init();
-        $this->login->init();
+        $this->subsman->init();
+        $this->blocks_core->init();  
+        $this->login->init();        
         $this->login_sc->init();   
         $this->gate->init();
+        $this->admin_notices->init();
+        
+        if( isset( $this->webhooks ) ) { $this->webhooks->init(); }
         
         // Collect required scopes from extensions and establish system requirements. 
         global $system_scopes_status;
@@ -394,18 +370,19 @@ final class WordPressTwitchPress {
         add_filter( 'plugin_action_links_' . TWITCHPRESS_PLUGIN_BASENAME, 'twitchpress_plugin_action_links' );
         add_filter( 'plugin_row_meta', 'twitchpress_plugin_row_meta', 10, 2 );
 
-        $this->post_types();
+        // Load the various systems, includes custom post types within those systems...
+        $this->load_systems();
         
         // Init action.
         do_action( 'twitchpress_init' );   
     }
     
     /**
-    * Register custom post types and their taxonomies...
+    * Load systems, including registration of custom post types...
     * 
-    * @version 2.0
+    * @version 2.1
     */
-    public function post_types() {
+    public function load_systems() {
         
         // Channels - Core
         require_once( 'includes/posts/class.twitchpress-post-type-channels.php' );
@@ -421,7 +398,35 @@ final class WordPressTwitchPress {
         if( get_option( 'twitchpress_perks_switch' ) == 'yes' ) {
             require_once( 'includes/posts/class.twitchpress-post-type-perks.php' );
             TwitchPress_Post_Type_Perks::init();  
-        }          
+        } 
+        
+        // Webhooks System
+        if( get_option( 'twitchpress_webhooks_switch' ) == 'yes' ) {
+            
+            // Set the callback URL sent to Twitch.tv when subscribing to a webhook...
+            $url = admin_url( 'admin-post.php?webhook=twitchpress_eventsub_notification' );
+            if( !defined( 'TWITCHPRESS_WEBHOOK_CALLBACK' ) ) { define( 'TWITCHPRESS_WEBHOOK_CALLBACK', $url ); }
+            unset( $url );
+            
+            require_once( 'includes/posts/class.twitchpress-post-type-webhooks.php' );             
+            require_once( plugin_basename( 'systems/webhooks/class.twitchpress-webhooks-cache.php' ) );
+            require_once( plugin_basename( 'systems/webhooks/class.twitchpress-webhooks-event-processing.php' ) );
+            
+            // Initiate the custom post-type...
+            TwitchPress_Post_Type_Webhooks::init();
+                     
+            // Hook into init for single site, priority 0 = highest priority...
+            add_action( 'init', 'twitchpress_integrate_wpdb_webhooksmeta', 0);
+
+            // Hook in to switch blog to support multisite...
+            add_action( 'switch_blog', 'twitchpress_integrate_wpdb_webhooksmeta', 0 );
+
+            // Listen for Twitch.tv EventSub webhook notifications and store them in cache for processing later...
+            add_action( 'admin_post_nopriv', 'twitchpress_webhooks_eventsub_listener', 1, 0 );
+            
+            // Background processing of webhook notifications that have been stored in cache...
+            add_action( 'init', array( new TwitchPress_Webhooks_Event_Processing(), 'process_handler' ) );            
+        }       
     }
     
     /**
@@ -529,6 +534,6 @@ if( !function_exists( 'TwitchPress' ) ) {
     }
 
     // Global for backwards compatibility.
-    global $GLOBALS;
-    $GLOBALS['twitchpress'] = TwitchPress();  
+    global $GLOBALS;   
+    $GLOBALS['twitchpress'] = TwitchPress(); 
 }

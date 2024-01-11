@@ -18,7 +18,7 @@ if( !class_exists( 'TwitchPress_Toolbars' ) ) :
 
 class TwitchPress_Toolbars {
     
-    public function __construct() {
+    public function __construct() {     
         // This is admin side only bars not administrator only. Security is done deeper into toolbar classes.
         add_action( 'wp_before_admin_bar_render', array( $this, 'admin_only_toolbars' ) );                
     }   

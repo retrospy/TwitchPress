@@ -88,7 +88,7 @@ class TwitchPress_DataView_All_APIErrors extends TwitchPress_ListTable_APIErrors
             $action = 'bulk-' . $this->_args['plural'];
 
             if ( ! wp_verify_nonce( $nonce, $action ) )
-                wp_die( 'Nope! Security check for a bulk action has failed!' );
+                wp_die( 'Security check for a bulk action has failed!' );
         }
 
         $action = $this->current_action();

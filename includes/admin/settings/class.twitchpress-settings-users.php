@@ -204,7 +204,7 @@ class TwitchPress_Settings_Users extends TwitchPress_Settings_Page {
                     'title'           => __( 'Display "Connect Using Twitch" Button', 'twitchpress-login' ),
                     'desc'            => __( 'Use Main Login Form', 'twitchpress-login' ),
                     'id'              => 'twitchpress_login_button',
-                    'default'         => 'yes',
+                    'default'         => 'no',
                     'type'            => 'checkbox',
                     'checkboxgroup'   => '',
                     'show_if_checked' => 'yes',
@@ -257,7 +257,7 @@ class TwitchPress_Settings_Users extends TwitchPress_Settings_Page {
                                 
                 array(
                     'title'    => __( 'Custom Login Page', 'twitchpress-login' ),
-                    'desc'     => __( 'Enter the page ID that displays your main login form.', 'twitchpress-login' ),
+                    'desc'     => __( 'Enter the page ID that displays your main login form. This does not add login features to the page. Please do that using [twitchpress_connect_button]', 'twitchpress-login' ),
                     'id'       => 'twitchpress_login_mainform_page_id',
                     'css'      => 'width:75px;',
                     'default'  => '',

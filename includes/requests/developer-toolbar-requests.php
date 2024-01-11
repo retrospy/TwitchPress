@@ -30,19 +30,10 @@ function twitchpress_api_version_switch() {
         wp_redirect();
         exit;                      
     }
-    
-    if( TWITCHPRESS_API_NAME == 'kraken' )
-    {
-        update_option( 'twitchpress_apiversion', 6 );
-        $version = 6;
-        $name = 'Helix';        
-    }
-    elseif( TWITCHPRESS_API_NAME == 'helix' )
-    {
-        update_option( 'twitchpress_apiversion', 5 );
-        $version = 5;
-        $name = 'Kraken';    
-    }
+
+    update_option( 'twitchpress_apiversion', 6 );
+    $version = 6;
+    $name = 'Helix';        
 
     TwitchPress_Admin_Notices::add_wordpress_notice(
         'devtoolbar_twitchapiswitch_notice',

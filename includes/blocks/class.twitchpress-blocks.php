@@ -28,7 +28,7 @@ class TwitchPress_Blocks_Core {
         add_action( 'init', array( $this, 'register_blocks' ) );     
     }
     
-    public function block_categories( $categories ) {
+    public function block_categories( $categories ) {     
         return array_merge(
             $categories,
             array(
@@ -151,7 +151,7 @@ class TwitchPress_Blocks_Core {
     * 
     * @version 1.0
     */
-    public function register_blocks() {
+    public function register_blocks() {       
         foreach( $this->blocks_array() as $key => $block ) {
             wp_register_script(
                 $block['handle_js'],

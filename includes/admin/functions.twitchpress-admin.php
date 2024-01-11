@@ -64,7 +64,7 @@ function twitchpress_get_screen_ids() {
 * 
 * @param integer $channel_id
 * @param string $channel_name
-* @param boolean $validated passing true will bypass a call to Kraken to validate channel.
+* @param boolean $validated passing true will bypass a call to Twitch API to validate channel.
 * 
 * @version 1.1
 */

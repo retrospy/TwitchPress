@@ -35,6 +35,8 @@ class TwitchPress_Object_Registry {
     * @param string $var variable name
     * @param mixed $new new variable value
     * @param mixed $old old variable value
+    * 
+    * @version 2.0
     */
     static function update_var( $id, $var, $new, $old = null ) {
         self::$storage[$id]->$var = $new;     

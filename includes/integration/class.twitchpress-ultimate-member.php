@@ -89,9 +89,7 @@ class TwitchPress_Ultimate_Member {
     public function set_current_users_um_role_based_on_twitch_sub() {    
 
         if( !is_user_logged_in() ) { return false; }
-        
-        if( !twitchpress_is_sync_due( __FILE__, __FUNCTION__, __LINE__, 120 ) ) { return; }
-                
+
         // Avoid processing the owner of the main channel (might not be admin with ID 1)
         if( twitchpress_is_current_user_main_channel_owner() ) { return; }
         
@@ -110,8 +108,6 @@ class TwitchPress_Ultimate_Member {
     * @version 3.0
     */
     public function set_twitch_subscribers_um_role( $wp_user_id ) {
-        if( !twitchpress_is_sync_due( __FILE__, __FUNCTION__, __LINE__, 60 ) ) { return; }
-        
         // Get the current filter to help us trace backwards from log entries. 
         $filter = current_filter();
 
@@ -145,7 +141,7 @@ class TwitchPress_Ultimate_Member {
         $channel_id = twitchpress_get_main_channels_twitchid();
         
         // Get subscription plan from user meta for the giving channel (based on channel ID). 
-        $sub_plan = get_user_meta( $wp_user_id, 'twitchpress_sub_plan_' . $channel_id, true );
+        $sub_plan = twitchpress_get_user_sub_tier( $wp_user_id );
 
         if( !$sub_plan ) 
         { 
@@ -176,13 +172,7 @@ class TwitchPress_Ultimate_Member {
         }
 
         // Add role
-        $user->add_role( $next_role );
-
-        // Log any change in history. 
-        if( $current_role !== $next_role ) {
-            $history_obj = new TwitchPress_History();
-            $history_obj->new_entry( $next_role, $current_role, 'auto', __( '', 'twitchpress' ), $wp_user_id );    
-        }           
+        $user->add_role( $next_role );           
     }
     
     /**
@@ -337,8 +327,7 @@ class TwitchPress_Ultimate_Member {
         $array[] = get_option( 'twitchpress_um_subtorole_2000' );
         $array[] = get_option( 'twitchpress_um_subtorole_3000' );
         return $array;
-    }
-                                                          
+    }                                                       
 }
     
 endif;    

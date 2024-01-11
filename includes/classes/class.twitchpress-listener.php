@@ -1,10 +1,10 @@
 <?php
 /**
- * TwitchPress Listener for $_GET requests.
+ * TwitchPress Listener for $_GET requests...
  * 
  * @author   Ryan Bayne
  * @category Admin
- * @package  TwitchPress/Toolbars
+ * @package  TwitchPress
  * @since    1.0.0
  */
  
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 if( !class_exists( 'TwitchPress_Listener' ) ) :
 
 class TwitchPress_Listener {  
-    public function __construct() {
+    public function __construct() {              
         add_action( 'wp_loaded', array( $this, 'GET_requests_listener' ) );
     }
          
@@ -25,16 +25,13 @@ class TwitchPress_Listener {
     * 
     * @version 1.2
     */
-    public function GET_requests_listener() {
+    public function GET_requests_listener() {      
         if ( $_SERVER['REQUEST_METHOD'] !== 'GET' ) {
             return;
         }
 
-        if( !isset( $_GET['twitchpressaction'] ) ) {
-            return;    
-        }
-
-        if( !isset( $_REQUEST['_wpnonce'] ) ) {
+        // One of these values must be set for it to be TwitchPress related...
+        if( !isset( $_GET['twitchpressaction'] ) && !isset( $_GET['state'] ) ) {
             return;    
         }
         
@@ -49,10 +46,8 @@ class TwitchPress_Listener {
         if( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
             return;    
         }
-       
-        // Start of public able requests. 
-        
-        // End of public able requests. 
+
+        self::twitch_oauth_unlocksubcontent_return();
         
         if( !is_user_logged_in() ) {       
             return;
@@ -62,8 +57,12 @@ class TwitchPress_Listener {
             return;    
         }
 
-        // Developer Toolbar Actions - First call 
-        self::developertoolbar_admin_actions();                   
+        if( !isset( $_REQUEST['_wpnonce'] ) ) {
+            return;    
+        }
+        
+        // Developer Toolbar Actions
+        self::developertoolbar_admin_actions();         
     } 
     
     /**
@@ -72,7 +71,6 @@ class TwitchPress_Listener {
     * @version 1.0
     */
     private static function developertoolbar_admin_actions() {
-        
         if( !isset( $_GET['twitchpressaction'] ) ) { 
             return; 
         }
@@ -116,7 +114,47 @@ class TwitchPress_Listener {
                 __( 'TwitchPress options have been deleted and the plugin will need some configuration to begin using it.', 'twitchpress' ) 
             );
         }  
-    }          
+    }         
+    /**
+    * Listens for oAuth2 return and calls applicable functions to process 
+    * the response from the Twitch API...
+    * 
+    * @version 1.0
+    */
+    public static function twitch_oauth_unlocksubcontent_return() {
+        if( !isset( $_GET['state'] ) || !isset( $_GET['scope'] ) || !isset( $_GET['code'] ) ){
+            return;    
+        }
+        
+        // We require the local state value stored in transient. 
+        if( !$transient_state = twitchpress_get_transient_oauth_state( $_GET['state'] ) ) { 
+            return;
+        }   
+        
+        // Ensure the return from Twitch.tv is a request to unlock subscriber content...
+        if( !isset( $transient_state['purpose'] ) || $transient_state['purpose'] != 'twitchsubcontent' ) {
+            return;
+        }
+           
+        $twitch_api = new TwitchPress_Twitch_API();
+        $auth = $twitch_api->request_user_access_token( $_GET['code'], __FUNCTION__ );  
+        $user = $twitch_api->get_user_by_bearer_token( $auth->access_token );
+
+        setcookie( 'twitchname', $user->display_name , 3600, COOKIEPATH, COOKIE_DOMAIN );
+        setcookie( 'twitchid', $user->id , 3600, COOKIEPATH, COOKIE_DOMAIN );
+        setcookie( 'twitchaccesstoken', $auth->access_token , 3600, COOKIEPATH, COOKIE_DOMAIN );
+        setcookie( 'twitchrefresh_token', $auth->refresh_token, 86400, COOKIEPATH, COOKIE_DOMAIN );
+
+        // Get subscription data for the main channel...
+        $subs = $twitch_api->get_broadcaster_subscriptions( twitchpress_get_main_channels_twitchid(), $user->id, false );        
+        if( isset( $subs->data['tier'] ) ) {
+            setcookie( 'twitchsubtier', $subs->data['tier'], 86400, COOKIEPATH, COOKIE_DOMAIN );
+        }
+
+        // Redirect back to original page...
+        twitchpress_redirect_tracking( get_page_uri( $transient_state['loginpageid'] ), __LINE__, __FUNCTION__ );
+        exit;        
+    }   
 }   
 
 endif;

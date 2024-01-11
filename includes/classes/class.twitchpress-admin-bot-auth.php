@@ -119,7 +119,7 @@ class TwitchPress_Bot_oAuth {
         }
 
         // We require the local state value stored in transient. 
-        elseif( !$transient_state = get_transient( 'twitchpress_oauth_' . $this->state ) ) {       
+        elseif( !$transient_state = twitchpress_get_transient_oauth_state( $this->state ) ) {       
             $return = true;      
             $this->rejection_reason = __( 'Bot Account Listener: No matching transient.', 'twitchpress' );
         }  
@@ -176,7 +176,7 @@ class TwitchPress_Bot_oAuth {
     /**
     * Request a token.
     * 
-    * @version 1.0
+    * @version 2.0
     */
     function token() {   
     
@@ -192,6 +192,7 @@ class TwitchPress_Bot_oAuth {
         $this->access_token = $token_array->access_token;
         $this->refresh_token = $token_array->refresh_token;
         $this->returned_scope = $token_array->scope;
+        $this->expires_in = $token_array->expires_in;
     }
     
     /**
@@ -205,6 +206,7 @@ class TwitchPress_Bot_oAuth {
         twitchpress_update_user_bot_code( $this->wp_user_id, $this->code );       
         twitchpress_update_user_bot_token( $this->wp_user_id, $this->access_token );
         twitchpress_update_user_bot_token_refresh( $this->wp_user_id, $this->refresh_token );        
+        twitchpress_update_user_bot_token_expires_in( $this->wp_user_id, $this->expires_in );        
 
         // Store bot channel credentials...  
         update_option( 'twitchpress_bot_code', $this->code );// old value, being phased out.
@@ -240,7 +242,10 @@ class TwitchPress_Bot_oAuth {
             $this->wp_user_id, 
             $this->code, 
             $this->access_token, 
-            $user_objects->data[0]->id 
+            $user_objects->data[0]->id,
+            $this->expires_in,
+            $this->returned_scope,
+            $this->refresh_token             
         );        
     }
     

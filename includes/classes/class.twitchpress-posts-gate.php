@@ -6,8 +6,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'TwitchPress_Posts_Gate' ) ) :
 
 /**
- * Applies a restriction on post content until a reason is found to
- * display it to the current user...
+ * Applies a restriction on an entire posts content until a reason is found to
+ * display it to the current user. Use the shortcode method to hide parts of
+ * a posts content only. 
  *
  * @class     TwitchPress_Post_Type_Perks
  * @version   1.0.0
@@ -18,7 +19,8 @@ if ( ! class_exists( 'TwitchPress_Posts_Gate' ) ) :
 class TwitchPress_Posts_Gate {
     public function init() {
         add_filter( 'the_content', array( __CLASS__, 'gate' ), 20 );
-        add_action( 'add_meta_boxes', array( __CLASS__, 'add_custom_boxes' ) );
+        add_action( 'add_meta_boxes_post', array( __CLASS__, 'add_custom_boxes' ) );
+        add_action( 'add_meta_boxes_page', array( __CLASS__, 'add_custom_boxes' ) );
         add_action( 'save_post', array( __CLASS__, 'save_twitchpress_post_gate_options' ) );        
     }  
     
@@ -29,7 +31,7 @@ class TwitchPress_Posts_Gate {
     * 
     * @version 2.0
     */
-    static function gate( $original_content ) {
+    static function gate( $original_content ) {      
         global $post, $current_user;
 
         $sub_status = TwitchPress_Current_User::subscription_status();
@@ -70,7 +72,7 @@ class TwitchPress_Posts_Gate {
     * 
     * @version 1.0
     */
-    public static function add_custom_boxes() {
+    public static function add_custom_boxes() {         
         add_meta_box(
             'twitchpress_post_gate_options', // Unique ID
             __( 'TwitchPress Gate', 'twitchpress' ),  
@@ -106,7 +108,6 @@ class TwitchPress_Posts_Gate {
     * @version 1.0
     */
     public static function save_twitchpress_post_gate_options( $post_id ){
-    
         if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
             return;
         }

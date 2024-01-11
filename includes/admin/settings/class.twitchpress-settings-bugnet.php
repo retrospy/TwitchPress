@@ -103,7 +103,7 @@ class TwitchPress_Settings_BugNet extends TwitchPress_Settings_Page {
             $install->installation_type = 'activation';
             $result = $install->install();
             
-            TwitchPress_Admin_Settings::add_message( __( 'BugNet has been installed', 'twitchpress' ) );                
+            TwitchPress_Admin_Settings::add_message( __( 'BugNet has been installed.', 'twitchpress' ) );                
         }
         else
         {
@@ -174,7 +174,7 @@ class TwitchPress_Settings_BugNet extends TwitchPress_Settings_Page {
                     'show_if_checked' => 'yes',
                     'autoload'        => true,
                 ),
-                                
+                              
                 array(
                     'type' => 'sectionend',
                     'id'   => 'twitchpress_bugnet_main_service_switches'
@@ -200,7 +200,7 @@ class TwitchPress_Settings_BugNet extends TwitchPress_Settings_Page {
                                 
                 array(
                     'title'    => __( 'Single User Error Dump', 'twitchpress-login' ),
-                    'desc'     => __( 'Enter a WP user ID to limit error dumping to that user.', 'twitchpress-login' ),
+                    'desc'     => __( 'Enter a WP user ID to restrict error output to that user only.', 'twitchpress-login' ),
                     'id'       => 'bugnet_error_dump_user_id',
                     'css'      => 'width:75px;',
                     'default'  => '1',
@@ -471,7 +471,7 @@ class TwitchPress_Settings_BugNet extends TwitchPress_Settings_Page {
             
             $bugnet_version = BUGNET_VERSION;
             
-            $settings = apply_filters( 'twitchpress_bugnet_version_settings', array(
+            $settings = apply_filters( 'twitchpress_bugnet_installation_settings', array(
             
                 array(
                     'title' => sprintf( __( 'BugNet Installation %s', 'twitchpress' ), BUGNET_VERSION ),
@@ -481,14 +481,12 @@ class TwitchPress_Settings_BugNet extends TwitchPress_Settings_Page {
                 ),
                 
                 array(
-                    'desc'            => __( 'name: the Twitch username can change.', 'twitchpress' ),
                     'id'              => 'bugnet_version',
                     'default'         => BUGNET_VERSION,
                     'type'            => 'hidden',
                 ),
                 
                 array(
-                    'desc'            => __( 'name: the Twitch username can change.', 'twitchpress' ),
                     'id'              => 'bugnet_first_installation_request',
                     'default'         => BUGNET_VERSION,
                     'type'            => 'hidden',

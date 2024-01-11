@@ -53,7 +53,7 @@ class TwitchPress_ListTable_APIErrors extends WP_List_Table {
         $entry_counter = 0;// Acts as temporary ID for data that does not have one. 
         
         // Get data for GET requests. 
-        $get_calls = get_transient( 'twitchpress_kraken_requests' );
+        $get_calls = get_transient( 'twitchpress_twitch_requests' );
 
         if( !isset( $get_calls['get']['requests'] ) || !is_array( $get_calls['get']['requests'] ) ) {
             $get_calls['get']['requests'] = array();            
@@ -64,7 +64,7 @@ class TwitchPress_ListTable_APIErrors extends WP_List_Table {
 
             // Filter very common functions.
             if( $entry['function'] == 'get_tokens_channel' ){ continue; }
-            if( $entry['function'] == 'check_user_token' ){ continue; }
+            if( $entry['function'] == 'validate_user_token' ){ continue; }
             
             ++$entry_counter;
             
@@ -87,7 +87,8 @@ class TwitchPress_ListTable_APIErrors extends WP_List_Table {
             $this->items[$new_key]['error_no']     = $entry['error_no'];
                        
         }
-
+        
+        $this->items = array_reverse( $this->items );
     }
     
     /**

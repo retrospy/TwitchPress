@@ -1,10 +1,10 @@
 <?php
 /**
- * helix5 for WordPress functions.
+ * Twitch API Helix API statuses.
  *
  * @author      Ryan Bayne
  * @category    Admin
- * @package     helix5
+ * @package     TwitchPress
  * @version     1.0.0
  */
 

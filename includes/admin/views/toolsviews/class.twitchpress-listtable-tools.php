@@ -91,12 +91,12 @@ class TwitchPress_ListTable_Tools extends WP_List_Table {
 	/**
 	 * Output the report.
 	 */
-	public function output_result() {
+	public function output_result() {      
 		$this->prepare_items();
         add_thickbox();
 		echo '<div id="poststuff" class="twitchpress-tables-wide">';
         echo '<form id="twitchpress-list-table-form-tools" method="post">';
-		$this->display();
+        $this->display();
         echo '<form>';
 		echo '</div>';
 	}
@@ -130,17 +130,31 @@ class TwitchPress_ListTable_Tools extends WP_List_Table {
             case 'header_action' :
             
                 $nonce = wp_create_nonce( 'tool_action' );
-
+                 
+                // Establish a class for link/button...
+                $class = 'button button-primary';
+                if( isset( $item['thickbox_link'] ) ) {
+                    $class .= " thickbox";
+                }
+                                                                                                                   
                 // Establish single (default) or multiple action tools.
-                if( !isset( $item['actions'] ) || !is_array( $item['actions'] ) ) {
-                    $url   = self_admin_url( 'admin.php?page=twitchpress_tools&_wpnonce=' . $nonce . '&toolname=' . $item['function'] );   
-                    echo '<a href="' . $url . '" class="button button-primary">' . __( 'Run Tool', 'twitchpress' ) . '</a>';
+                if( !isset( $item['actions'] ) || !is_array( $item['actions'] ) ) {                  
+                    if( isset( $item['thickbox_link'] ) ) {
+                        $url = $item['thickbox_link'];
+                    } else {
+                        $url = self_admin_url( 'admin.php?page=twitchpress_tools&_wpnonce=' . $nonce . '&toolname=' . $item['function'] );   
+                    }
+                    echo '<a href="' . $url . '" class="' . $class . '">' . __( 'Run Tool', 'twitchpress' ) . '</a>';
                 } else {
                     $i = 0;
                     foreach( $item['actions'] as $action => $attributes ) {
-                        if( $i > 0 ) { echo '<br><br>'; }
-                        $url   = self_admin_url( 'admin.php?page=twitchpress_tools&_wpnonce=' . $nonce . '&toolname=' . $item['function'] . '&action=' . $action );   
-                        echo '<a href="' . $url . '" class="button button-primary">' . $attributes['title'] . '</a>';  
+                        if( $i > 0 ) { echo '<br><br>'; }  
+                        if( isset( $item['thickbox_link'] ) ) {
+                            $url = $item['thickbox_link'];
+                        } else {
+                            $url = self_admin_url( 'admin.php?page=twitchpress_tools&_wpnonce=' . $nonce . '&toolname=' . $item['function'] . '&action=' . $action );   
+                        }                       
+                        echo '<a href="' . $url . '" class="' . $class . '">' . $attributes['title'] . '</a>';  
                         ++$i;
                     }    
                 }
@@ -161,6 +175,8 @@ class TwitchPress_ListTable_Tools extends WP_List_Table {
 	 * Get columns.
 	 *
 	 * @return array
+     * 
+     * @version 1.1
 	 */
 	public function get_columns() {
         
@@ -171,12 +187,6 @@ class TwitchPress_ListTable_Tools extends WP_List_Table {
             'header_category'    => __( 'Category', 'twitchpress' ),
             'header_action'      => __( 'Run Tool', 'twitchpress' ),
 		);
-
-        // Sub view might offer bulk actions and require checkbox column. 
-        if( isset( $this->checkbox_column ) && $this->checkbox_column === true ) {
-            $cb = array( 'cb' => __( '<input type="checkbox" />', 'twitchpress' ) );
-            $columns = array_merge( $cb, $columns );    
-        }
         
 		return $columns;
 	}

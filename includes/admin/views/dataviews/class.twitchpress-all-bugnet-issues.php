@@ -92,7 +92,7 @@ class TwitchPress_DataView_All_BugNet_Issues extends TwitchPress_ListTable_BugNe
             $action = 'bulk-' . $this->_args['plural'];
 
             if ( ! wp_verify_nonce( $nonce, $action ) )
-                wp_die( 'Nope! Security check for a bulk action has failed!' );
+                wp_die( 'Security check for a bulk action has failed!' );
         }
 
         $action = $this->current_action();

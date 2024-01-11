@@ -5,8 +5,6 @@
  * @author Ryan Bayne (Implementation)
  * @author A5hleyRich (Original)
  *
- * @package WP-Background-Processing
- * 
  * @link https://github.com/A5hleyRich/wp-background-processing/
  */
  
@@ -83,12 +81,11 @@ if ( ! class_exists( 'TwitchPress_Async_Request' ) ) {
          */
         public function data( $data ) {
             $this->data = $data;
-
             return $this;
         }
 
         /**
-         * Dispatch the async request
+         * Dispatch the async request...
          *
          * @return array|WP_Error
          */
@@ -100,7 +97,7 @@ if ( ! class_exists( 'TwitchPress_Async_Request' ) ) {
         }
 
         /**
-         * Get query args
+         * Get query args...
          *
          * @return array
          */
@@ -116,7 +113,7 @@ if ( ! class_exists( 'TwitchPress_Async_Request' ) ) {
         }
                    
         /**
-         * Get query URL
+         * Get query URL...
          *
          * @return string
          */
@@ -160,7 +157,7 @@ if ( ! class_exists( 'TwitchPress_Async_Request' ) ) {
 
             $this->handle();
 
-            wp_die();
+            wp_die( 'WordPress died at Line ' . __LINE__ . ' - ' . __FILE__ );
         }
 
         /**
@@ -170,6 +167,5 @@ if ( ! class_exists( 'TwitchPress_Async_Request' ) ) {
          * during the async request.
          */
         abstract protected function handle();
-
     }
 }

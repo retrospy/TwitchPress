@@ -34,12 +34,13 @@ class BugNet_Install_Database {
         }         
     }
     
+    /**
+    * Run BugNet database table installation...
+    * 
+    * @version 2.0
+    */
     public function install() {
-        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-
-        // Register primary tables...
-        add_action( 'init', array( $this, 'primary_tables_registration' ) );
-        add_action( 'switch_blog', array( $this, 'primary_tables_registration' ) );   
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );  
 
         // Install groups of tables or specific services tables...
         switch ( $this->installation_type ) {
@@ -79,13 +80,11 @@ class BugNet_Install_Database {
     */
     public function activation() {
         global $wpdb;
-        
         $this->primary_tables(); 
     }  
     
     public function update() {
         global $wpdb;
-        
         $this->primary_tables();
     }
     
@@ -101,6 +100,19 @@ class BugNet_Install_Database {
         self::table_bugnet_reports_meta();
         self::table_bugnet_wp_caches();
     }    
+
+    /**
+    * Register core tables...
+    * 
+    * @version 1.0
+    */
+    function twitchpress_register_tables() {
+        global $wpdb;
+        $wpdb->twitchpress_activity  = "{$wpdb->prefix}twitchpress_activity";
+        $wpdb->twitchpress_errors    = "{$wpdb->prefix}twitchpress_errors";
+        $wpdb->twitchpress_endpoints = "{$wpdb->prefix}twitchpress_endpoints";
+        $wpdb->twitchpress_meta      = "{$wpdb->prefix}twitchpress_meta";    
+    }
 
     /**
     * Individual issues of various types are inserted into this table first...
@@ -169,7 +181,7 @@ PRIMARY KEY (id)
     /**
     * Meta data for reports...
     * 
-    * @version 1.0
+    * @version 2.0
     */
     static function table_bugnet_reports_meta() {
         global $charset_collate, $wpdb;
@@ -178,7 +190,7 @@ PRIMARY KEY (id)
 meta_id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 report_id bigint(20) unsigned DEFAULT 0,
 name varchar(250) DEFAULT NULL,
-meta_key varchar (50) NOT NULL DEFAULT '0',
+meta_key varchar(50) NOT NULL DEFAULT '0',
 met_value varchar(500) DEFAULT NULL,
 PRIMARY KEY (meta_id)
 ) $charset_collate; ";
@@ -190,7 +202,7 @@ PRIMARY KEY (meta_id)
     * Caching directory for all other BugNet records of all types and used
     * when a record requires a dump of data...
     * 
-    * @version 1.0
+    * @version 2.0
     */
     static function table_bugnet_wp_caches() {
         global $charset_collate, $wpdb;
@@ -198,7 +210,7 @@ PRIMARY KEY (meta_id)
         $table = "CREATE TABLE " . $wpdb->prefix . "bugnet_wp_caches (
 id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 item_id bigint(20) unsigned,
-item_type varchar (50) NOT NULL,
+item_type varchar(50) NOT NULL,
 wp_cache_key varchar(250) NOT NULL,
 wp_cache_group varchar(250) DEFAULT NULL,
 wp_cache_expiry DATETIME NOT NULL DEFAULT '0000-00-00 00:00:00',

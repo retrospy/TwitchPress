@@ -27,7 +27,7 @@ class TWITCHPRESS_All_API {
     // Configuration & Status
     protected $service = null; /* streamlabs, twitch, streamlements */
     protected $version = null; /* if required provide version number */
-    protected $profile = null; /* development transition support i.e. choose kraken or helix */ 
+    protected $profile = null; /* development transition support when new version of Twitch API come */ 
     public $app_ready = false; /* set to true once all credentials established */
     public $response = null;   /* original API service response */
     public $decompress = true; /* set to false if the body should stay compressed */
@@ -83,7 +83,7 @@ class TWITCHPRESS_All_API {
         $this->user_refresh_token    = get_user_meta( $user_id, 'twitchpress_allapi_refresh_token_' . $this->service, true );
         $this->user_token_lifetime   = get_user_meta( $user_id, 'twitchpress_allapi_token_lifetime' . $this->service, true );
         $this->user_token_created_at = get_user_meta( $user_id, 'twitchpress_allapi_token_created_at_' . $this->service, true );
-        $this->user_scope     = get_user_meta( $user_id, 'twitchpress_allapi_scope_' . $this->service, true );
+        $this->user_scope            = get_user_meta( $user_id, 'twitchpress_allapi_scope_' . $this->service, true );
         
         return true;
     }

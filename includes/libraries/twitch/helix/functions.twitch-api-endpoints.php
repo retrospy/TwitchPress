@@ -288,7 +288,7 @@ function twitchpress_helix_endpoints_collections() {
     // Add Item to Collection
     $endpoints[] = array(
         'name'     => __( 'Add Item to Collection', 'twitchpress' ),
-        'desc'     => __( 'Adds a specified video to a specified collection. The video ID and type are specified as required parameters in the request body, in JSON format. The item ID is a video ID (not a collection item ID), and the type must be “video.”', 'twitchpress' ),
+        'desc'     => __( 'Adds a specified video to a specified collection. The video ID and type are specified as required parameters in the request body, in JSON format. The item ID is a video ID (not a collection item ID), and the type must be “video.�?', 'twitchpress' ),
         'url'      => 'https://api.twitch.tv/helix/collections/<collection ID>/items',
         'doc'      => ''
     );

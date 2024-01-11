@@ -44,14 +44,6 @@ function twitchpress_get_ip_address() {
 }
 
 /**
-* Count total number of "administrators". 
-*/
-function twitchpress_get_total_administrators( $partial_admin = false, $return_users = false ) {   
-    $user_query = new WP_User_Query( array( 'role' => 'administrator' ) );
-    return $user_query->total_users;      
-} 
-
-/**
  * Retrieves the value of a passed parameter in a URL string, positionally insensitive
  * 
  * @param $url - [string] URL string provided

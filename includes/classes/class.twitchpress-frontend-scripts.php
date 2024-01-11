@@ -42,7 +42,7 @@ class TwitchPress_Frontend_Scripts {
     /**
      * Hook in methods.
      */
-    public static function init() {
+    public static function init() {           ;
         add_action( 'wp_enqueue_scripts', array( __CLASS__, 'load_scripts' ) );
         add_action( 'wp_print_scripts', array( __CLASS__, 'localize_printed_scripts' ), 5 );
         add_action( 'wp_print_footer_scripts', array( __CLASS__, 'localize_printed_scripts' ), 5 );

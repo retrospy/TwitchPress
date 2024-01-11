@@ -5,8 +5,6 @@
  * When possible we will add roles and capabilities required for extensions to 
  * avoid duplicate capabilities that offer different levels of aaccess. 
  *
- * @class    TwitchPress_Roles
- * @version  1.0
  * @package  TwitchPress/ Classes
  * @category Class
  * @author   Ryan Bayne
@@ -20,6 +18,11 @@ if( !class_exists( 'TwitchPress_Roles_Capabilities_Installation' ) ) :
 
 class TwitchPress_Roles_Capabilities_Installation {
 
+    /**
+    * Array of all default roles and capabilities...
+    * 
+    * @version 2.0
+    */
     public function fullarray() {
         $array = array();
                   
@@ -52,7 +55,7 @@ class TwitchPress_Roles_Capabilities_Installation {
                 'twitchpress_control_follower_chat_mode' => array( 'title' => __( 'Control Follower Chat Mode', 'twitchpress' ), 'desc' => __( '', 'twitchpress' ) ),
             )
         );
-        $array['twitchpress_role_main_channel_moderator'] = apply_filters( 'twitchpress_role_main_channel_moderator', $array['twitchpress_role_main_channel_editor'] );
+        $array['twitchpress_role_main_channel_moderator'] = apply_filters( 'twitchpress_role_main_channel_moderator', $array['twitchpress_role_main_channel_moderator'] );
         
         // Main Twitch Channel VIP 
         $array['twitchpress_role_main_channel_vip'] = array(
@@ -66,37 +69,37 @@ class TwitchPress_Roles_Capabilities_Installation {
                 'twitchpress_chat_links'     => array( 'title' => __( 'Post Chat Links', 'twitchpress' ), 'desc' => __( '', 'twitchpress' ) ),
             )
         );
-        $array['twitchpress_role_main_channel_vip'] = apply_filters( 'twitchpress_role_main_channel_vip', $array['twitchpress_role_main_channel_editor'] );
+        $array['twitchpress_role_main_channel_vip'] = apply_filters( 'twitchpress_role_main_channel_vip', $array['twitchpress_role_main_channel_vip'] );
         
         // Main Channel Twitch Subscriber Plan 1000
         $array['twitchpress_role_subplan_1000'] = array(
-            'title' => __( 'Level One Subscriber', 'twitchpress' ),
+            'title' => __( 'Tier One Subscriber', 'twitchpress' ),
             'desc'  => __( '', 'twitchpress' ),
             'caps'  => array(        
                 //'twitchpress_subplan_1000' => array( 'title' => __( '', 'twitchpress' ), 'desc' => __( '', 'twitchpress' ) ),
             )
         );
-        $array['twitchpress_role_subplan_1000'] = apply_filters( 'twitchpress_role_subplan_1000', $array['twitchpress_role_main_channel_editor'] );
+        $array['twitchpress_role_subplan_1000'] = apply_filters( 'twitchpress_role_subplan_1000', $array['twitchpress_role_subplan_1000'] );
         
         // Main Channel Twitch Subscriber Plan 2000
         $array['twitchpress_role_subplan_2000'] = array(
-            'title' => __( 'Level Two Subscriber', 'twitchpress' ),
+            'title' => __( 'Tier Two Subscriber', 'twitchpress' ),
             'desc'  => __( '', 'twitchpress' ),
             'caps'  => array(        
                 //'twitchpress_subplan_2000' => array( 'title' => __( '', 'twitchpress' ), 'desc' => __( '', 'twitchpress' ) ),
             )
         );
-        $array['twitchpress_role_subplan_2000'] = apply_filters( 'twitchpress_role_subplan_2000', $array['twitchpress_role_main_channel_editor'] );
+        $array['twitchpress_role_subplan_2000'] = apply_filters( 'twitchpress_role_subplan_2000', $array['twitchpress_role_subplan_2000'] );
         
         // Main Channel Twitch Subscriber Plan 3000
         $array['twitchpress_role_subplan_3000'] = array(
-            'title' => __( 'Level Three Subscriber', 'twitchpress' ),
+            'title' => __( 'Tier Three Subscriber', 'twitchpress' ),
             'desc'  => __( '', 'twitchpress' ),
             'caps'  => array(        
                 //'twitchpress_subplan_3000' => array( 'title' => __( '', 'twitchpress' ), 'desc' => __( '', 'twitchpress' ) ),
             )
         ); 
-        $array['twitchpress_role_subplan_3000'] = apply_filters( 'twitchpress_role_subplan_3000', $array['twitchpress_role_main_channel_editor'] );
+        $array['twitchpress_role_subplan_3000'] = apply_filters( 'twitchpress_role_subplan_3000', $array['twitchpress_role_subplan_3000'] );
                 
         return $array;
     }

@@ -30,11 +30,8 @@ function twitchpress_integration() {
 function twitchpress_plugin_action_links( $links ) {
     $action_links = array(
         'settings' => '<a href="' . admin_url( 'admin.php?page=twitchpress' ) . '" title="' . esc_attr( __( 'View TwitchPress Settings', 'twitchpress' ) ) . '">' . __( 'Settings', 'twitchpress' ) . '</a>',
+        'wizard' => '<a href="' . admin_url( 'index.php?page=twitchpress-setup' ) . '" title="' . esc_attr( __( 'Start TwitchPress Setup Wizard', 'twitchpress' ) ) . '">' . __( 'Setup Wizard', 'twitchpress' ) . '</a>',
     );
-    
-    if( TWITCHPRESS_PRO == true ) {
-        $action_links = array_merge( $action_links, array( 'pro' => '<a href="' . admin_url( 'admin.php?page=twitchpress' ) . '" title="' . esc_attr( __( 'Pro Edition Installed', 'twitchpress' ) ) . '">' . __( 'Pro Edition', 'twitchpress' ) . '</a>' ) );
-    }
 
     return array_merge( $action_links, $links );
 }
@@ -51,9 +48,11 @@ function twitchpress_plugin_action_links( $links ) {
 function twitchpress_plugin_row_meta( $links, $file ) {     
     if ( $file == TWITCHPRESS_PLUGIN_BASENAME ) {
         $row_meta = array(
-            'support' => '<a href="' . esc_url( apply_filters( 'twitchpress_support_url', 'https://github.com/RyanBayne/TwitchPress/issues' ) ) . '" title="' . esc_attr( __( 'Visit Support Forum', 'twitchpress' ) ) . '">' . __( 'Support', 'twitchpress' ) . '</a>',
-            'donate' => '<a href="' . esc_url( apply_filters( 'twitchpress_donate_url', TWITCHPRESS_DONATE ) ) . '" title="' . esc_attr( __( 'Donate to Project', 'twitchpress' ) ) . '">' . __( 'Donate', 'twitchpress' ) . '</a>',
-            'blog' => '<a href="http://twitchpress.wordpress.com" title="' . esc_attr( __( 'Get project updates from the blog.', 'twitchpress' ) ) . '">' . __( 'Blog', 'twitchpress' ) . '</a>',
+            'discord' => '<a href="' . esc_url( apply_filters( 'twitchpress_support_url', 'https://discord.gg/ScrhXPE' ) ) . '" title="' . esc_attr( __( 'Visit Discord for support', 'twitchpress' ) ) . '">' . __( 'Discord', 'twitchpress' ) . '</a>',
+            'github'  => '<a href="' . esc_url( apply_filters( 'twitchpress_github_url', 'https://github.com/RyanBayne/TwitchPress/issues' ) ) . '" title="' . esc_attr( __( 'Visit Project GitHub', 'twitchpress' ) ) . '">' . __( 'GitHub', 'twitchpress' ) . '</a>',
+            'donate'  => '<a href="' . esc_url( apply_filters( 'twitchpress_donate_url', TWITCHPRESS_DONATE ) ) . '" title="' . esc_attr( __( 'Donate to Project', 'twitchpress' ) ) . '">' . __( 'Donate', 'twitchpress' ) . '</a>',
+            'twitch'  => '<a href="https://twitch.tv/lolindark1" title="' . esc_attr( __( 'Donate to Project', 'twitchpress' ) ) . '">' . __( 'Twitch', 'twitchpress' ) . '</a>',
+            'blog'    => '<a href="http://twitchpress.wordpress.com" title="' . esc_attr( __( 'Get project updates from the blog.', 'twitchpress' ) ) . '">' . __( 'Blog', 'twitchpress' ) . '</a>',
         );
 
         return array_merge( $links, $row_meta );

@@ -16,7 +16,7 @@ class TwitchPress_Current_User_Setter {
         add_action( 'init', array( __CLASS__, 'twitch' ), 5 ); 
     }   
     
-    public static function twitch() {
+    public static function twitch() {             
         global $current_user;
         
         // Subscriber status...

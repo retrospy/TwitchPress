@@ -13,7 +13,7 @@
 // Prohibit direct script loading
 defined( 'ABSPATH' ) || die( 'Direct script access is not allowed!' );
 
-if ( ! class_exists( 'TwitchPress_Background_Process' ) ) {
+if ( ! class_exists( 'TwitchPress_Background_Processing' ) ) {
                                                          
     /**
      * Abstract WP_Background_Process class.
@@ -25,7 +25,7 @@ if ( ! class_exists( 'TwitchPress_Background_Process' ) ) {
      * 
      * @link https://github.com/A5hleyRich/wp-background-processing/blob/master/classes/wp-background-process.php
      */
-    abstract class TwitchPress_Background_Process extends TwitchPress_Async_Request {
+    abstract class TwitchPress_Background_Processing extends TwitchPress_Async_Request {
 
         /**
          * Action
@@ -77,7 +77,7 @@ if ( ! class_exists( 'TwitchPress_Background_Process' ) ) {
         }
                                
         /**
-         * Dispatch
+         * Dispatch by performing a HTTP POST...
          *
          * @access public
          * @return void
@@ -86,7 +86,7 @@ if ( ! class_exists( 'TwitchPress_Background_Process' ) ) {
             // Schedule the cron healthcheck.
             $this->schedule_event();
 
-            // Perform remote post.
+            // Perform remote post
             return parent::dispatch();
         }
 
@@ -99,7 +99,6 @@ if ( ! class_exists( 'TwitchPress_Background_Process' ) ) {
          */
         public function push_to_queue( $data ) {
             $this->data[] = $data;
-
             return $this;
         }
                                    
@@ -176,25 +175,27 @@ if ( ! class_exists( 'TwitchPress_Background_Process' ) ) {
 
             if ( $this->is_process_running() ) {
                 // Background process already running.
-                wp_die();
+                wp_die( 'WordPress died at Line ' . __LINE__ . ' - ' . __FILE__ );
             }
 
             if ( $this->is_queue_empty() ) {
                 // No data to process.
-                wp_die();
+                wp_die( 'WordPress died at Line ' . __LINE__ . ' - ' . __FILE__ );
             }
 
             check_ajax_referer( $this->identifier, 'nonce' );
 
             $this->handle();
 
-            wp_die();
+            wp_die( 'WordPress died at Line ' . __LINE__ . ' - ' . __FILE__ );
         }
                                            
         /**
-         * Is queue empty
+         * Is queue empty...
          *
          * @return bool
+         * 
+         * @version 1.0
          */
         protected function is_queue_empty() {
             global $wpdb;
@@ -266,6 +267,8 @@ if ( ! class_exists( 'TwitchPress_Background_Process' ) ) {
          * Get batch
          *
          * @return stdClass Return the first batch from the queue
+         * 
+         * @version 1.0
          */
         protected function get_batch() {
             global $wpdb;
@@ -511,6 +514,5 @@ if ( ! class_exists( 'TwitchPress_Background_Process' ) ) {
          * @return mixed
          */
         abstract protected function task( $item );
-
     }
 }

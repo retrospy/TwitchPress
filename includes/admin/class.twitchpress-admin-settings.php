@@ -39,6 +39,13 @@ class TwitchPress_Admin_Settings {
      * @var array
      */
     private static $messages = array();
+
+    /**
+     * Information messages.
+     *
+     * @var array
+     */
+    private static $info = array();
     
     /**
     * This is more about configuration reminding.
@@ -59,7 +66,7 @@ class TwitchPress_Admin_Settings {
             include_once( 'settings/class.twitchpress-settings-page.php' );
                                                                             
             $settings[] = include( 'settings/class.twitchpress-settings-general.php' );
-            $settings[] = include( 'settings/class.twitchpress-settings-kraken.php' ); 
+            $settings[] = include( 'settings/class.twitchpress-settings-twitch.php' ); # DO NOT REMOVE # 
             $settings[] = include( 'settings/class.twitchpress-settings-users.php' );    
             $settings[] = include( 'settings/class.twitchpress-settings-otherapi.php' );    
             $settings[] = include( 'settings/class.twitchpress-settings-bugnet.php' );    
@@ -80,7 +87,7 @@ class TwitchPress_Admin_Settings {
      * 
      * @version 1.2
      */
-    public static function save() {
+    public static function save() {      
         global $current_tab;
 
         if ( empty( $_REQUEST['_wpnonce'] ) || ! wp_verify_nonce( $_REQUEST['_wpnonce'], 'twitchpress-settings' ) ) {
@@ -94,12 +101,12 @@ class TwitchPress_Admin_Settings {
 
         self::add_message( __( 'Your settings have been saved.', 'twitchpress' ) );
         self::check_download_folder_protection();
-             
+                      
         do_action( 'twitchpress_settings_saved' );
     }
 
     /**
-     * Add a message.
+     * Add a gree-style message for display under the tabs on settings pages...
      * @param string $text
      */
     public static function add_message( $text ) {
@@ -107,12 +114,20 @@ class TwitchPress_Admin_Settings {
     }
 
     /**
-     * Add an error.
+     * Add an error for display under the tabs on settings pages...
      * @param string $text
      */
     public static function add_error( $text ) {
         self::$errors[] = $text;
     }
+
+    /**
+    * Display a blue-style message... 
+    * @param mixed $text
+    */
+    public static function add_info( $text ) {
+        self::$info[] = $text;
+    }    
 
     /**
      * Output messages + errors.
@@ -126,6 +141,10 @@ class TwitchPress_Admin_Settings {
         } elseif ( sizeof( self::$messages ) > 0 ) {
             foreach ( self::$messages as $message ) {
                 echo '<div id="message" class="updated inline"><p><strong>' . esc_html( $message ) . '</strong></p></div>';
+            }
+        } elseif ( sizeof( self::$info ) > 0 ) {
+            foreach ( self::$info as $information ) {
+                echo '<div id="message" class="notice notice-info"><p><strong>' . esc_html( $information ) . '</strong></p></div>';
             }
         }
     }
@@ -143,8 +162,6 @@ class TwitchPress_Admin_Settings {
         $suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 
         do_action( 'twitchpress_settings_start' );
-
-        //wp_enqueue_script( 'twitchpress_settings', TWITCHPRESS_PLUGIN_URL . '/assets/js/admin/settings' . $suffix . '.js', array( 'jquery', 'jquery-ui-datepicker', 'jquery-ui-sortable', 'iris', 'select2' ), TWITCHPRESS_VERSION, true );
 
         wp_localize_script( 'twitchpress_settings', 'twitchpress_settings_params', array(
             'i18n_nav_warning' => __( 'The changes you made will be lost if you navigate away from this page.', 'twitchpress' )
@@ -169,6 +186,10 @@ class TwitchPress_Admin_Settings {
 
         if ( ! empty( $_GET['twitchpress_message'] ) ) {
             self::add_message( stripslashes( $_GET['twitchpress_message'] ) );
+        }
+        
+        if ( ! empty( $_GET['twitchpress_info'] ) ) {
+            self::add_info( stripslashes( $_GET['twitchpress_info'] ) );
         }
 
         // Get tabs for the settings page
@@ -309,7 +330,6 @@ class TwitchPress_Admin_Settings {
                             <?php echo $tooltip_html; ?>
                         </th>
                         <td class="forminp forminp-<?php echo sanitize_title( $value['type'] ) ?>">
-
                             <input
                                 name="<?php echo esc_attr( $value['id'] ); ?>"
                                 id="<?php echo esc_attr( $value['id'] ); ?>"
@@ -319,6 +339,7 @@ class TwitchPress_Admin_Settings {
                                 class="<?php echo esc_attr( $value['class'] ); ?>"
                                 placeholder="<?php echo esc_attr( $value['placeholder'] ); ?>"
                                 <?php echo implode( ' ', $custom_attributes ); ?>
+                                <?php if( isset( $value['readonly'] ) ) { echo 'readonly'; } ?>                                
                                 /> <?php echo $description; ?>
                         </td>
                     </tr><?php
@@ -378,7 +399,6 @@ class TwitchPress_Admin_Settings {
                         </th>
                         <td class="forminp forminp-<?php echo sanitize_title( $value['type'] ) ?>">
                             <?php echo $description; ?>
-
                             <textarea
                                 name="<?php echo esc_attr( $value['id'] ); ?>"
                                 id="<?php echo esc_attr( $value['id'] ); ?>"
@@ -433,15 +453,13 @@ class TwitchPress_Admin_Settings {
 
                 // Radio inputs
                 case 'radio' :
-
                     $option_value = self::get_option( $value['id'], $value['default'] );
-
                     ?><tr valign="top">
                         <th scope="row" class="titledesc">
                             <label for="<?php echo esc_attr( $value['id'] ); ?>"><?php echo esc_html( $value['title'] ); ?></label>
                             <?php echo $tooltip_html; ?>
                         </th>
-                        <td class="forminp forminp-<?php echo sanitize_title( $value['type'] ) ?>">
+                        <td class="forminp forminp-checkbox">
                             <fieldset>
                                 <?php echo $description; ?>
                                 <ul>
@@ -449,15 +467,14 @@ class TwitchPress_Admin_Settings {
                                     foreach ( $value['options'] as $key => $val ) {
                                         ?>
                                         <li>
-                                            <label><input
-                                                name="<?php echo esc_attr( $value['id'] ); ?>"
+                                            <input
+                                                name="<?php echo $value['id']; ?>"
                                                 value="<?php echo $key; ?>"
                                                 type="radio"
-                                                style="<?php echo esc_attr( $value['css'] ); ?>"
-                                                class="<?php echo esc_attr( $value['class'] ); ?>"
+                                                id="<?php echo esc_attr( $value['id'] . $key ); ?>"
                                                 <?php echo implode( ' ', $custom_attributes ); ?>
                                                 <?php checked( $key, $option_value ); ?>
-                                                /> <?php echo $val ?></label>
+                                                /> <?php echo $val ?>
                                         </li>
                                         <?php
                                     }
@@ -473,7 +490,7 @@ class TwitchPress_Admin_Settings {
                 case 'scopecheckboxpublic' :
                 case 'checkbox' :
                 
-                    $option_value    = self::get_option( $value['id'], $value['default'] );
+                    $option_value = self::get_option( $value['id'], $value['default'] );
                     
                     $visbility_class = array();
 
@@ -597,6 +614,16 @@ class TwitchPress_Admin_Settings {
     }
 
     /**
+    * Validate values to confirm to strict requirements...
+    * 
+    * @param mixed $options
+    * @version 1.0
+    */
+    public static function validate_field( $options ) {
+    
+    }
+    
+    /**
      * Save admin fields.
      *
      * Loops though the twitchpress options array and outputs each field.
@@ -614,7 +641,7 @@ class TwitchPress_Admin_Settings {
         $update_options = array();
 
         // Loop options and get values to save.
-        foreach ( $options as $option ) {
+        foreach ( $options as $key => $option ) {
             
             if ( ! isset( $option['id'] ) || ! isset( $option['type'] ) ) {
                 continue;
@@ -690,11 +717,30 @@ class TwitchPress_Admin_Settings {
                 $update_options[ $option_name ] = $value;
             }
 
-            /**
-             * Fire an action before saved.
-             * @deprecated 2.4.0 - doesn't allow manipulation of values!
-             */
-            do_action( 'twitchpress_update_option', $option );
+            /* 
+            * Validate the value if a giving rule is giving...
+            */
+            if( isset( $option['validation'] ) ) {      
+                switch( $option['validation'] ) {
+                    case 'filtered' :        
+                            // Run value through a custom filter with custom error notice...
+                            $result = apply_filters( 'twitchpress_admin_settings_validate_option', $value, $option, $raw_value );
+                            if( !$result['outcome'] ) {
+                                self::add_error( $result['error'] );
+                                // Unset the option to prevent it being saved...
+                                unset( $update_options[ $option['id'] ] );                                
+                            }
+                        break;    
+                    case 'alphanumeric' :         
+                            if( !ctype_alnum( $value ) ) {          
+                                //add_settings_error( string $setting, string $code, string $message, string $type = 'error' )
+                                self::add_error( sprintf( __( "An entry needs your attention. The %s field must be alphabetical and numerical characters only.", "twitchpress" ), $option['title']) );    
+                                // Unset the option to prevent it being saved...
+                                unset( $update_options[ $option['id'] ] );                            
+                            }
+                        break;
+                }
+            }
         }
 
         // Save all options in our array.

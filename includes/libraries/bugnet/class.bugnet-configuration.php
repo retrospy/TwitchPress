@@ -51,6 +51,7 @@ class BugNet_Configuration extends BugNet {
         
         // Register primary tables and additional for activated services...
         add_action( 'init', array( $this, 'primary_tables_registration' ), 1 );  
+        add_action( 'switch_blog', array( $this, 'primary_tables_registration' ), 10 );
         
         if( $this->is_tracing_enabled ) {
             add_action( 'init', array( $this, 'tracing_tables_registration' ) );

@@ -40,10 +40,9 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
          * Hook plugin classes into WP/WC core.
          */
         public function attach_hooks() {
-
             add_action( 'plugins_loaded',        array( $this, 'init_filters' ), 1 );
 
-            add_action( 'init',                  array( $this, 'twitch_login_public_listener' ), 1 );
+            add_action( 'init',                  array( $this, 'twitch_login_public_listener' ), 3 );
             add_action( 'init',                  array( $this, 'redirect_login_page' ), 1 );
 
             // WordPress Login Form Approach - Adds button to core login form and processes with full integration.
@@ -108,7 +107,7 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
         * @version 1.7
         */
         public function twitch_login_public_listener() {              
-
+                         
             if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
                 return;
             }
@@ -132,9 +131,9 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
             }
             
             $state_code = $_GET['state'];
-
+                        
             // We require the local state value stored in transient. 
-            if( !$transient_state = get_transient( 'twitchpress_oauth_' . $state_code ) ) { 
+            if( !$transient_state = twitchpress_get_transient_oauth_state( $state_code ) ) { 
                 return;
             }             
             
@@ -170,15 +169,15 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
             }        
 
             // we need CODE
-            if( !isset( $_GET['code'] ) ) {
-                wp_die( __( 'Sorry, it appears Twitch.tv returned you without a code. Please try again and report this issue if it happens again.', 'twitchpress' ), __( 'Twitch Login Request Ended', 'twitchpress' ) ); 
+            if( !isset( $_GET['code'] ) ) {     
+                wp_die( __( 'Sorry, it appears Twitch.tv did not return a code. Please try again and report this issue if it happens again.', 'twitchpress' ), __( 'Twitch Login Request Ended', 'twitchpress' ) ); 
             }            
          
             // we need SCOPE
-            if( !isset( $_GET['scope'] ) ) {
+            if( !isset( $_GET['scope'] ) ) {     
                 wp_die( __( 'Sorry, it appears Twitch.tv returned you without all the URL values required to complete your login request. Please try again and report this issue if it happens again.', 'twitchpress' ), __( 'Twitch Login Request Ended', 'twitchpress' ) ); 
             }
-
+                
             // The request is Twitch oAuth2 related, lets try and auth visitor.
             $this->process_login_using_twitch_helix( $state_code );
         }
@@ -189,9 +188,10 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
         * 
         * Assumes CODE, SCOPE and STATE exist in GET request.  
         * 
-        * @version 2.0
+        * @version 4.0
         */
         private function process_login_using_twitch_helix( $state_code ) { 
+            global $wpdb;
                 
             $helix = new TWITCHPRESS_Twitch_API();
             
@@ -203,24 +203,18 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
                                    null );                
                 return;                   
             }
-      
+             
             // Generate a token, it is stored as user meta further down.
             $token_array = $helix->request_user_access_token( $_GET['code'], __FUNCTION__ );    
-            
+                                             
             // Confirm token was returned...  
             if( !twitchpress_was_valid_token_returned_from_helix( $token_array ) ) {   
                 $this->loginerror( __( 'Invalid Token', 'twitchpress' ), 
                                    __( 'Your request to login via Twitch could not be complete because the giving token is invalid.', 'twitchpress' ),
-                                   null ); 
-                                   
-                                   
-                                   // TEMP REMOVE
-                                   exit;
-                                   
-                                                                    
+                                   null );                                        
                 return;                         
             }
- 
+
             // Ensure the user:read:email scope has been accepted...
             if( !in_array( 'user:read:email', $token_array->scope ) ) {   
                 $this->loginerror( __( 'User Permission Required', 'twitchpress' ), 
@@ -230,7 +224,6 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
             }
                                 
             // Get the visitors Twitch details...
-            //$twitch_user = $helix->getUserObject_Authd( $token_array->access_token, $_GET['code'] );
             $twitch_user = $helix->get_user_by_bearer_token( $token_array->access_token );
  
             if( is_wp_error( $twitch_user ) || $twitch_user == false ) { 
@@ -246,31 +239,31 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
                                    null );                                                    
                 return;                        
             }
-              
+                      
             // Santization before any database insert...
-            $twitch_user->id                = sanitize_key( $twitch_user->id ); // 44322889,
-            $twitch_user->bio               = sanitize_text_field( $twitch_user->description ); // "Just a gamer playing games and chatting. :)",
-            $twitch_user->display_name      = sanitize_user( $twitch_user->display_name ); // "dallas",
-            $twitch_user->email             = sanitize_email( $twitch_user->email ); // "email-address@provider.com",
-            $twitch_user->email_verified    = true; // No longer provided by Twitch.tv API
-            $twitch_user->logo              = esc_url_raw( $twitch_user->profile_image_url ) ; // "https://static-cdn.jtvnw.net/jtv_user_pictures/dallas-profile_image-1a2c906ee2c35f12-300x300.png",
-            $twitch_user->name              = sanitize_user( $twitch_user->login, true ); // "dallas",
-            $twitch_user->login             = sanitize_user( $twitch_user->login, true ); // "dallas",
-                                          
+            $twitch_user->id             = sanitize_key( $twitch_user->id ); // 44322889,
+            $twitch_user->bio            = sanitize_text_field( $twitch_user->description ); // "Just a gamer playing games and chatting. :)",
+            $twitch_user->display_name   = sanitize_user( $twitch_user->display_name ); // "dallas",
+            $twitch_user->email          = sanitize_email( $twitch_user->email ); // "email-address@provider.com",
+            $twitch_user->email_verified = true; // No longer provided by Twitch.tv API
+            $twitch_user->logo           = esc_url_raw( $twitch_user->profile_image_url ) ; // "https://static-cdn.jtvnw.net/jtv_user_pictures/dallas-profile_image-1a2c906ee2c35f12-300x300.png",
+            $twitch_user->name           = sanitize_user( $twitch_user->login, true ); // "dallas",
+            $twitch_user->login          = sanitize_user( $twitch_user->login, true ); // "dallas",
+                  
             // Email processing - ['email_verified] is required and must be bool(true) by default.
             if( 'yes' == get_option( 'twitchpress_registration_requirevalidemail' ) ) 
             {
                 if( !isset( $twitch_user->email_verified ) || !$twitch_user->email_verified ) 
                 {
                     $this->loginerror( __( 'Email Address Not Verified'), 
-                                       __( 'Your request to login via Twitch was refused because your email address has not been verified by Twitch. You will need to verify your email through Twitch and then register on this site.', 'twitchpress' ),
+                                       __( 'Your request to login via Twitch was refused because your email address has not been verified by Twitch. You will need to verify your email on Twitch.tv and then register on this site.', 'twitchpress' ),
                                        null 
                     );  
         
                     return;                                             
                 } 
             }
-            
+                         
             // We can log the user into WordPress if they have an existing account.
             $wp_user = get_user_by( 'email', $twitch_user->email );
             
@@ -313,7 +306,19 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
                     update_user_meta( $wp_user_id, 'twitchpress_code', sanitize_text_field( $_GET['code'] ) );
                     update_user_meta( $wp_user_id, 'twitchpress_token', $token_array->access_token );
                     update_user_meta( $wp_user_id, 'twitchpress_token_refresh', $token_array->refresh_token );
-
+                    update_user_meta( $wp_user_id, 'twitchpress_twitch_expires_in', $token_array->expires_in );
+                    update_user_meta( $wp_user_id, 'twitchpress_token_scope', $token_array->scope );
+                                                                  
+                    // Update main channel if main channel owner is logging in...
+                    if( 1 == $wp_user_id ) {
+                        twitchpress_update_main_channels_code( sanitize_text_field( $_GET['code'] ) ); 
+                        twitchpress_update_main_channels_token( $token_array->access_token ); 
+                        twitchpress_update_main_channels_refresh_token( $token_array->refresh_token );
+                        twitchpress_update_main_channels_scopes( $token_array->scope ); 
+                        twitchpress_update_main_channels_expires_in( $token_array->expires_in );                       
+                        twitchpress_update_main_channels_scope( $token_array->scope );                       
+                    }
+                    
                     // Log the user in.
                     self::authenticate_login_by_twitch( $get_users_results[0]->ID, $twitch_user->name, $state_code  );
                     
@@ -334,9 +339,11 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
                 update_user_meta( $wp_user->data->ID, 'twitchpress_code', sanitize_text_field( $_GET['code'] ) );
                 update_user_meta( $wp_user->data->ID, 'twitchpress_token', $token_array->access_token );
                 update_user_meta( $wp_user->data->ID, 'twitchpress_token_refresh', $token_array->refresh_token );
-
+                update_user_meta( $wp_user->data->ID, 'twitchpress_twitch_expires_in', $token_array->expires_in );
+                update_user_meta( $wp_user->data->ID, 'twitchpress_token_scope', $token_array->scope );
+                    
                 self::authenticate_login_by_twitch( $wp_user->data->ID, $wp_user->data->user_login, $state_code );
-
+                
                 return;
             }
             
@@ -345,8 +352,8 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
             {     
                 $this->loginerror( __( 'Manual Registration Required', 'twitchpress' ), 
                                    __( 'This site does not allow automatic registration using Twitch. Please go to the registration page and create an account using the same email address as used in your Twitch account.', 'twitchpress' ),
-                                   null );   
-                                                                          
+                                   null ); 
+                                                                                               
                 return;                         
             }
             
@@ -363,7 +370,7 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
                                                    
                 return;   
             }
-            
+              
             $user_url = 'http://twitch.tv/' . $twitch_user->login;
             $password = wp_generate_password( 12, true );
             $new_user = array(
@@ -376,8 +383,7 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
                     
             $wp_user_id = wp_insert_user( $new_user ) ;
 
-            if ( is_wp_error( $wp_user_id ) ) 
-            {    
+            if ( is_wp_error( $wp_user_id ) ) {    
                 $error_message_append = '
                 <ul>
                     <li>Login: ' . $twitch_user->login . '</li>
@@ -406,23 +412,14 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
             update_user_meta( $wp_user_id, 'twitchpress_code', sanitize_text_field( $_GET['code'] ) );
             update_user_meta( $wp_user_id, 'twitchpress_token', $token_array->access_token );
             update_user_meta( $wp_user_id, 'twitchpress_token_refresh', $token_array->refresh_token );
+            update_user_meta( $wp_user_id, 'twitchpress_twitch_expires_in', $token_array->expires_in );
+            update_user_meta( $wp_user_id, 'twitchpress_token_scope', $token_array->scope );
 
-            // Avatar Method One: works with the raw URL and filters the display of avatars...
             twitchpress_update_user_meta_avatar( $wp_user_id, $twitch_user->logo );
             
             // Store users original Twitch.tv logo URL in user meta for future use when permitted...
             twitchpress_update_user_meta_twitch_logourl( $wp_user_id, $twitch_user->logo );
-            
-            // Avatar Method Two: local WP media attachment of Twitch.tv logo for use as avatar...
-            $attachment_id = twitchpress_save_twitch_logo( $wp_user_id, $twitch_user->logo, $twitch_user->display_name, $twitch_user->login );
-            if( $attachment_id !== WP_Error ) {
-                // Use the new media to create an avatar...
-                update_user_meta( $wp_user_id, $wpdb->get_blog_prefix() . 'user_avatar', $attachment_id );         
-            } 
                                    
-            // Run sync which can import more data than the values above i.e. subscription status...
-            twitchpress_sync_user_on_registration( $wp_user_id );
-        
             // Now we need to authenticate the visitor and give them access to WP...
             self::authenticate_login_by_twitch( $wp_user_id, $twitch_user->display_name, $state_code );
         }               
@@ -478,7 +475,7 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
             
             if( twitchpress_login_prevent_redirect() ) { return; }
             
-            $transient = get_transient( 'twitchpress_oauth_' . $state_code );
+            $transient = twitchpress_get_transient_oauth_state( $state_code );
 
             if( isset( $transient['successurl'] ) && is_string( $transient['successurl'] ) ) 
             {
@@ -584,10 +581,10 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
             // This is the top (above) position button.
             if( 'below' !== get_option( 'twitchpress_login_loginpage_position' ) ) { return; }
 
-            $kraken = new TWITCHPRESS_Twitch_API();
+            $twitch_api = new TWITCHPRESS_Twitch_API();
 
             // Ensure Twitch app is setup to avoid pointless API calls.
-            $is_app_set = $kraken->is_app_set();
+            $is_app_set = $twitch_api->is_app_set();
             if( !$is_app_set ) { return; }
                         
             $states_array = array( 'random14' => twitchpress_random14(), 'view' => 'default' );
@@ -624,20 +621,6 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
             // Is auto login active? (sends visitors straight to Twitch oAuth2)
             $do_autologin = false;
             $temp_option_autologin = false;
-
-            // We will not do this with helix, instead we will work towards a more global
-            // value or an approach that disables services and takes such situations very serious!
-            if( TWITCHPRESS_API_NAME == 'kraken' ) 
-            {
-                // Generate oAuth2 URL.
-                $kraken = new TWITCHPRESS_Twitch_API();
-
-                // Ensure Twitch app is setup to avoid pointless API calls.
-                $is_app_set = $kraken->is_app_set();
-                if( !$is_app_set ) {
-                    return;
-                }
-            }
 
             // States array is used to process visitor on returning from Twitch.tv.
             // We can use these values later in this function but they are more important to generate_authorization_url()
@@ -831,49 +814,7 @@ if ( ! class_exists( 'TwitchPress_Login' ) ) :
             $permalink = get_post_permalink( $custom_login_id );
             twitchpress_redirect_tracking( $permalink, __LINE__, __FUNCTION__, __FILE__ );
             exit;
-        }
-
-        /**
-         * Modify the url returned by wp_registration_url().
-         *
-         * @return string page url with registration shortcode.
-         */
-        public function register_url_func() {
-            if ( isset( $this->db_settings_data['set_registration_url'] ) ) {
-                $reg_url = get_permalink( absint( $this->db_settings_data['set_registration_url'] ) );
-                return $reg_url;
-            }
-        }
-
-        /** force redirection of default registration to custom one */
-        public function redirect_reg_page() {
-            if ( isset( $this->db_settings_data['set_registration_url'] ) ) {
-
-                $reg_url = get_permalink( absint( $this->db_settings_data['set_registration_url'] ) );
-
-                $page_viewed = basename( esc_url( $_SERVER['REQUEST_URI'] ) );
-
-                if ( $page_viewed == "wp-login.php?action=register" && $_SERVER['REQUEST_METHOD'] == 'GET' ) {
-                    twitchpress_redirect_tracking( $reg_url, __LINE__, __FUNCTION__, __FILE__ );
-                    exit;
-                }
-            }
-        }
-        
-        /** Force redirection of default registration to the page with custom registration. */
-        public function redirect_password_reset_page() {
-            if ( isset( $this->db_settings_data['set_lost_password_url'] ) ) {
-
-                $password_reset_url = get_permalink( absint( $this->db_settings_data['set_lost_password_url'] ) );
-
-                $page_viewed = basename( esc_url( $_SERVER['REQUEST_URI'] ) );
-
-                if ( $page_viewed == "wp-login.php?action=lostpassword" && $_SERVER['REQUEST_METHOD'] == 'GET' ) {
-                    twitchpress_redirect_tracking( $password_reset_url, __LINE__, __FUNCTION__, __FILE__ );
-                    exit;
-                }
-            }
-        }                                    
+        }                                  
     }
     
 endif;    
