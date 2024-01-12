@@ -1065,7 +1065,7 @@ class TwitchPress_Tools {
         $twitch_sub_array = $twitch_api->get_broadcaster_subscriptions( $twitch_channel_id, $twitch_user_id, false );
 
         // Cancelled
-        if( $local_sub_array && !$twitch_sub_array ) {
+        if( $local_sub_array && (!$twitch_sub_array || !$twitch_user_id) ) {
             
             TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponsetool', 'warning', false, 
             __( 'Subscription Ended', 'twitchpress' ), 
@@ -1080,7 +1080,7 @@ class TwitchPress_Tools {
         }
 
         // No recent subscription... 
-        if( !$local_sub_array && !$twitch_sub_array || !isset( $twitch_sub_array->data[0]->tier ) ) { 
+        if( !$local_sub_array && (!$twitch_sub_array || !$twitch_user_id) || !isset( $twitch_sub_array->data[0]->tier ) ) {
             TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponsetool', 'info', false, 
             __( 'Not Subscribing', 'twitchpress' ), 
             __( 'The response from Twitch.tv indicates that the user is not currently subscribing to this sites main channel.', 'twitchpress' ) );

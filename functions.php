@@ -2707,8 +2707,13 @@ function twitchpress_user_sub_sync_single( $wp_user_id, $output_notice = false )
     $local_sub_array = twitchpress_get_user_meta_twitch_sub( $wp_user_id );
     $twitch_sub_array = $twitch_api->get_broadcaster_subscriptions( $twitch_channel_id, $twitch_user_id, false );
 
+    //TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponse', 'info', false,
+    //    __( 'Subscription Ended', 'twitchpress' ),
+    //    __( print_r($twitch_user_id, true), 'twitchpress' ) );
+
+
     // Cancelled
-    if( $local_sub_array && !$twitch_sub_array ) {
+    if( $local_sub_array && (!$twitch_sub_array || !$twitch_user_id)) {
 
         TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponse', 'warning', false, 
         __( 'Subscription Ended', 'twitchpress' ), 
@@ -2724,7 +2729,7 @@ function twitchpress_user_sub_sync_single( $wp_user_id, $output_notice = false )
     }
 
     // No recent subscription... 
-    if( !$local_sub_array && !$twitch_sub_array || !isset( $twitch_sub_array->data[0]->tier ) ) {
+    if( !$local_sub_array && (!$twitch_sub_array || !$twitch_user_id) || !isset( $twitch_sub_array->data[0]->tier ) ) {
         TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponse', 'info', false,
         __( 'Not Subscribing', 'twitchpress' ),
         __( 'The response from Twitch.tv indicates that you are not currently subscribing to this sites main channel.', 'twitchpress' ) );
