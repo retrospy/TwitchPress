@@ -2681,7 +2681,7 @@ function twitchpress_get_user_sub_plan_name( $wp_user_id ) {
 
 function twitchpress_get_user_sub_last_checked( $wp_user_id ) {
     $sub_array = twitchpress_get_user_meta_twitch_sub( $wp_user_id );
-    if( isset( $sub_array->checked ) ) { return $sub_array->checked; }
+    if( isset( $sub_array->update_time ) ) { return $sub_array->update_time; }
     return false;
 }
 
@@ -2709,7 +2709,7 @@ function twitchpress_user_sub_sync_single( $wp_user_id, $output_notice = false )
 
     // Cancelled
     if( $local_sub_array && !$twitch_sub_array ) {
-        
+
         TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponse', 'warning', false, 
         __( 'Subscription Ended', 'twitchpress' ), 
         __( 'The response from Twitch.tv indicates that a previous subscription to the sites main channel was discontinued. Subscriber perks on this website will also be discontinued.', 'twitchpress' ) );
@@ -2724,9 +2724,9 @@ function twitchpress_user_sub_sync_single( $wp_user_id, $output_notice = false )
     }
 
     // No recent subscription... 
-    if( !$local_sub_array && !$twitch_sub_array || !isset( $twitch_sub_array->data[0]->tier ) ) { 
-        TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponse', 'info', false, 
-        __( 'Not Subscribing', 'twitchpress' ), 
+    if( !$local_sub_array && !$twitch_sub_array || !isset( $twitch_sub_array->data[0]->tier ) ) {
+        TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponse', 'info', false,
+        __( 'Not Subscribing', 'twitchpress' ),
         __( 'The response from Twitch.tv indicates that you are not currently subscribing to this sites main channel.', 'twitchpress' ) );
         
         // API Logging outcome...
@@ -2736,10 +2736,11 @@ function twitchpress_user_sub_sync_single( $wp_user_id, $output_notice = false )
     }                     
     
     // First time subscription sync...
-    if( !$local_sub_array && $twitch_sub_array && isset( $twitch_sub_array->data[0]->tier ) ) { 
+    if( !$local_sub_array && $twitch_sub_array && isset( $twitch_sub_array->data[0]->tier ) ) {
         // Action - update the user meta with raw subscription data array...
-        twitchpress_update_user_meta_twitch_sub( $wp_user_id, $twitch_sub_array->data[0] );
-                    
+        $twitch_sub_array->data[0]->update_time = new DateTime('now');
+        twitchpress_update_user_meta_twitch_sub( $wp_user_id, !isset( $twitch_sub_array->data[0] ) );
+
         TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponse', 'success', false, 
         __( 'New Subscriber', 'twitchpress' ), 
         __( 'You\'re subscription has been confirmed and your support is greatly appreciated. You now have access to subscriber perks on this site.', 'twitchpress' ) );
@@ -2753,6 +2754,7 @@ function twitchpress_user_sub_sync_single( $wp_user_id, $output_notice = false )
     // Sub plan changed...
     if( $local_sub_array->tier !== $twitch_sub_array->data[0]->tier ) {
         // Action - update the user meta with raw subscription data array...
+        $twitch_sub_array->data[0]->update_time = new DateTime('now');
         twitchpress_update_user_meta_twitch_sub( $wp_user_id, $twitch_sub_array->data[0] );
         
         TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponse', 'success', false, 
@@ -2767,8 +2769,11 @@ function twitchpress_user_sub_sync_single( $wp_user_id, $output_notice = false )
 
     // No change to plan...
     if( $local_sub_array->tier == $twitch_sub_array->data[0]->tier ) {
-        TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponse', 'success', false, 
-        __( 'Continuing Subscriber', 'twitchpress' ), 
+        // Action - update the user meta with raw subscription data array...
+        $twitch_sub_array->data[0]->update_time = new DateTime('now');
+        twitchpress_update_user_meta_twitch_sub( $wp_user_id, $twitch_sub_array->data[0] );
+        TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponse', 'success', false,
+        __( 'Continuing Subscriber', 'twitchpress' ),
         __( 'Your existing subscription has been confirmed as unchanged and your continued support is greatly appreciated.', 'twitchpress' ) );
 
         $outcome = sprintf( __( 'User with ID [%s] is subscribing on the same plan.','twitchpress'), $wp_user_id );

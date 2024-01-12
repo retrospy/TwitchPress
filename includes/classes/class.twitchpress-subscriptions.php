@@ -191,7 +191,7 @@ class TwitchPress_Twitch_Subscription_Management {
                 </tr>                    
                 <tr>
                     <th>
-                        <label for="something"><?php _e( 'Update Date', 'twitchpress'); ?></label>
+                        <label for="something"><?php _e( 'Last Update', 'twitchpress'); ?></label>
                     </th>
                     <td>                
                         <?php $this->display_users_last_twitch_to_wp_sync_date( $user->ID ); ?>
@@ -273,7 +273,7 @@ class TwitchPress_Twitch_Subscription_Management {
                 </tr>                    
                 <tr>
                     <th>
-                        <label for="something"><?php _e( 'Update Date', 'twitchpress'); ?></label>
+                        <label for="something"><?php _e( 'Last Update', 'twitchpress'); ?></label>
                     </th>
                     <td>                
                         <?php $this->display_users_last_twitch_to_wp_sync_date( $user->ID ); ?>
@@ -379,7 +379,7 @@ class TwitchPress_Twitch_Subscription_Management {
         $output = __( 'Waiting - Please Click Update', 'twitchpress' );
         $time = twitchpress_get_user_sub_last_checked( $wp_user_id );
         if( !$time ) { _e( 'Never Updated - Please Click Update', 'twitchpress' ); return; }
-        echo human_time_diff( $time, time() ); //$output = date( 'F j, Y g:i a', $time ); 
+        echo human_time_diff( $time->getTimestamp(), time() ); //$output = date( 'F j, Y g:i a', $time );
     }                   
     
     /**
