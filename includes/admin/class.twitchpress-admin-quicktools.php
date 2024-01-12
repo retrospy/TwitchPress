@@ -1091,8 +1091,9 @@ class TwitchPress_Tools {
         }                     
                         
         // First time subscription sync...
-        if( !$local_sub_array && $twitch_sub_array && isset( $twitch_sub_array->data[0]->tier ) ) { 
+        if( !$local_sub_array && $twitch_sub_array && isset( $twitch_sub_array->data[0]->tier ) ) {
             // Action - update the user meta with raw subscription data array...
+            $twitch_sub_array->data[0]->update_time = new DateTime('now');
             twitchpress_update_user_meta_twitch_sub( $wp_user_id, $twitch_sub_array->data[0] );
             
             TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponsetool', 'success', false, 
@@ -1106,6 +1107,8 @@ class TwitchPress_Tools {
                                 
         // Sub plan changed...
         if( isset( $local_sub_array->tier ) && isset( $twitch_sub_array->data[0]->tier ) && $local_sub_array->tier !== $twitch_sub_array->data[0]->tier ) {
+            // Action - update the user meta with raw subscription data array...
+            $twitch_sub_array->data[0]->update_time = new DateTime('now');
             twitchpress_update_user_meta_twitch_sub( $wp_user_id, $twitch_sub_array->data[0] );
             
             TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponsetool', 'success', false, 
@@ -1119,6 +1122,10 @@ class TwitchPress_Tools {
 
         // No change to plan...
         if( isset( $local_sub_array->tier ) && isset( $twitch_sub_array->data[0]->tier ) && $local_sub_array->tier == $twitch_sub_array->data[0]->tier ) {
+            // Action - update the user meta with raw subscription data array...
+            $twitch_sub_array->data[0]->update_time = new DateTime('now');
+            twitchpress_update_user_meta_twitch_sub( $wp_user_id, $twitch_sub_array->data[0] );
+
             TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponsetool', 'success', false, 
             __( 'Continuing Subscriber', 'twitchpress' ), 
             __( 'Existing subscription has been confirmed with no changes found, no update required.', 'twitchpress' ) );
