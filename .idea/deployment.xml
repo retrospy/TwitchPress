@@ -5,7 +5,8 @@
       <paths name="TwitchPress">
         <serverdata>
           <mappings>
-            <mapping deploy="/" local="$PROJECT_DIR$" web="/wp-content/plugins/twitchpress" />
+            <mapping deploy="wp-content/plugins/twitchpress" local="$PROJECT_DIR$" web="/" />
+            <mapping local="" />
           </mappings>
         </serverdata>
       </paths>
