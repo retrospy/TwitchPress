@@ -1,2 +1,3 @@
 twitchpress-logs/*
 .idea/sshConfigs.xml
+.idea/webServers.xml
