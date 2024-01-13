@@ -376,10 +376,10 @@ class TwitchPress_Twitch_Subscription_Management {
     * @version 1.0
     */
     public function display_users_last_twitch_to_wp_sync_date( int $wp_user_id ) {
-        $output = __( 'Waiting - Please Click Update', 'twitchpress' );
+        $output = __( 'Waiting', 'twitchpress' );
         $time = twitchpress_get_user_sub_last_checked( $wp_user_id );
-        if( !$time ) { _e( 'Never Updated - Please Click Update', 'twitchpress' ); return; }
-        echo date_format($time, 'Y-m-d H:i:s');
+        if( !$time ) { _e( 'Never Updated', 'twitchpress' ); return; }
+        echo date_format($time, 'F j, Y g:i a');
         echo " - ";
         echo human_time_diff( $time->getTimestamp(), time() ); //$output = date( 'F j, Y g:i a', $time );
         echo " ago";
