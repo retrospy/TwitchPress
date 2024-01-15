@@ -298,11 +298,9 @@ final class WordPressTwitchPress {
     }
 
     public function init_third_party_integration() {
-        if( is_plugin_active( 'ultimate-member/ultimate-member.php' ) ){
-            require_once( 'includes/integration/class.twitchpress-ultimate-member.php' );
+		    require_once( 'includes/integration/class.twitchpress-ultimate-member.php' );
             $this->UM = new TwitchPress_Ultimate_Member();
             $this->UM->init();
-        }
     }
 
     public function twitchpress_login_styles() {

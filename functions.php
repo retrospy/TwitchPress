@@ -2744,7 +2744,7 @@ function twitchpress_user_sub_sync_single( $wp_user_id, $output_notice = false )
     if( !$local_sub_array && $twitch_sub_array && isset( $twitch_sub_array->data[0]->tier ) ) {
         // Action - update the user meta with raw subscription data array...
         $twitch_sub_array->data[0]->update_time = new DateTime('now');
-        twitchpress_update_user_meta_twitch_sub( $wp_user_id, !isset( $twitch_sub_array->data[0] ) );
+        twitchpress_update_user_meta_twitch_sub( $wp_user_id, $twitch_sub_array->data[0] );
 
         TwitchPress_Admin_Notices::add_wordpress_notice( 'usersubsyncnosubresponse', 'success', false, 
         __( 'New Subscriber', 'twitchpress' ), 

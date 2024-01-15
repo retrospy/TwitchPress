@@ -168,11 +168,11 @@ class TwitchPress_Ultimate_Member {
         // Cleanup users existing subscription paired roles (should only be one but just in case we plan for more)
         foreach( $users_sub_paired_roles as $key => $role_name )
         {
-            $user->remove_role( $role_name );    
+            $user->remove_role( $role_name );
         }
 
-        // Add role
-        $user->add_role( $next_role );           
+	    // Add role
+        $user->add_role( $next_role );
     }
     
     /**
@@ -209,7 +209,7 @@ class TwitchPress_Ultimate_Member {
     * @version 1.0
     */
     public function settings_add_options_users( $settings ) {
-        global $current_section, $only_section;
+        global $current_section, $only_section, $wp_roles;;
         
         $new_settings = array();
         
@@ -218,10 +218,12 @@ class TwitchPress_Ultimate_Member {
             
             // Get Ultimate Member roles.  
             $um_roles = array();
-            if( function_exists( 'um_get_roles' ) ) {
-                $um_roles = um_get_roles();
-            } 
-                        
+            $all_roles = $wp_roles->roles;
+	        foreach(array_keys($all_roles) as $key)
+	        {
+		        $um_roles[$key] = $all_roles[$key]["name"];
+	        }
+
             $new_settings = apply_filters( 'twitchpress_ultimatemember_users_settings', array(
  
                 array(
